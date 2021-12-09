@@ -1,0 +1,96 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: denoland/deno:1.16.4
+    steps:
+      - checkout
+      - run:
+          name: Lint
+          command: |
+            deno lint
+      - run:
+          name: Run Unit Tests & Coverage
+          command: |
+            deno test --coverage=cov_profile
+            deno coverage cov_profile
+
+  publish:
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          name: Setup Environment Variables
+          command: |
+            REGISTRY=$DOCKER_REGISTRY_URL/danielemery/keys
+            echo $REGISTRY
+            echo "export REGISTRY=$REGISTRY" >> $BASH_ENV
+            TAG=$CIRCLE_TAG
+            echo $TAG
+            echo "export TAG=$TAG" >> $BASH_ENV
+      - run:
+          name: Run Docker Build
+          command: |
+            docker build -t $REGISTRY:$TAG .
+      - run:
+          name: Push Docker Image
+          command: |
+            echo $CR_PAT | docker login $DOCKER_REGISTRY_URL -u $DOCKER_USERNAME --password-stdin
+            docker push $REGISTRY:$TAG
+
+  publish-latest:
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          name: Setup Environment Variables
+          command: |
+            REGISTRY=$DOCKER_REGISTRY_URL/danielemery/keys
+            echo $REGISTRY
+            echo "export REGISTRY=$REGISTRY" >> $BASH_ENV
+            TAG=$CIRCLE_TAG
+            echo $TAG
+            echo "export TAG=$TAG" >> $BASH_ENV
+      - run:
+          name: Run Docker Build
+          command: |
+            docker build -t $REGISTRY:$TAG .
+            docker tag $REGISTRY:$TAG $REGISTRY:latest
+      - run:
+          name: Push Docker Image
+          command: |
+            echo $CR_PAT | docker login $DOCKER_REGISTRY_URL -u $DOCKER_USERNAME --password-stdin
+            docker push $REGISTRY:$TAG
+            docker push $REGISTRY:latest
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+
+      - publish:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v([0-9])*.([0-9])*.([0-9])*-.*/
+            branches:
+              ignore: /.*/
+          context: danielemery-github
+
+      - publish-latest:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v([0-9])*.([0-9])*.([0-9])*/
+            branches:
+              ignore: /.*/
+          context: danielemery-github
