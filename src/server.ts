@@ -58,7 +58,7 @@ export default function start(port: number) {
         filter.noneOf = params.getAll("noneOf");
       }
       const filteredKeys = keys.filter((key) => filterIncludesKey(filter, key));
-      const responseData = filteredKeys.map((key) => key.key).join("\n");
+      const responseData = filteredKeys.map((key) => `${key.key} ${key.name}`).join("\n");
       return new Response(responseData, {
         status: Status.OK,
         statusText: STATUS_TEXT.get(Status.OK),
