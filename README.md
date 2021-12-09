@@ -1,28 +1,27 @@
 # Keys
 
-Simple repository to manage and distribute my public keys
+Simple repository to manage and distribute my public ssh keys.
 
-## Example curl Calls
+Public keys are stored statically in the repository and hosted at https://keys.demery.com.au
+
+## Example Usage
 
 ### Get all listed keys
 
 ```sh
-curl https://keys.demery.com.au/api
+curl "https://keys.demery.com.au/api"
 ```
 
-### Get keys matching single tag (server)
+### Get keys for demery account on thunderbird and override authorized_keys file with them
 
 ```sh
-curl https://keys.demery.com.au/api?oneOf=server
+# Consider backup first
+cp ~/.ssh/authorized_keys ~/.ssh/authorized_keys.backup
+# Override file with that remote goodness
+curl "https://keys.demery.com.au/api?allOf=demery&allOf=thunderbird&noneOf=disabled" > ~/.ssh/authorized_keys
 ```
 
-### Get keys matching multiple tags (server OR git)
-
-```sh
-curl https://keys.demery.com.au/api?oneOf=server&oneOf=git
-```
-
-## Usage
+## Development
 
 ### Running locally
 
@@ -30,7 +29,15 @@ curl https://keys.demery.com.au/api?oneOf=server&oneOf=git
 deno run --allow-net main.ts
 ```
 
+### Run tests
+
+```sh
+deno test
+```
+
 ### Running with docker
+
+## Local build
 
 ```sh
 docker build -t keys:latest .
