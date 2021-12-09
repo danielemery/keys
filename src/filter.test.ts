@@ -1,7 +1,8 @@
 import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import { Filter, filterIncludesKey, parseParameters } from "./filter.ts";
 
-Deno.test("must parse oneOf url param", () => {
+/** parseParameters */
+Deno.test("parseParameters: must parse oneOf url param", () => {
   const expected: Filter = {
     oneOf: ["simple"],
   };
@@ -9,7 +10,7 @@ Deno.test("must parse oneOf url param", () => {
   assertEquals(actual, expected);
 });
 
-Deno.test("must parse complex filter params", () => {
+Deno.test("parseParameters: must parse complex filter params", () => {
   const expected: Filter = {
     noneOf: ["not-me", "or-me"],
     allOf: ["definitely-me", "and-me"],
@@ -27,7 +28,8 @@ const testKey = {
   name: "",
 };
 
-Deno.test("empty must filter correctly", () => {
+/** filterIncludesKey */
+Deno.test("filterIncludesKey: empty must filter correctly", () => {
   const filter: Filter = {};
 
   assertEquals(
@@ -41,7 +43,7 @@ Deno.test("empty must filter correctly", () => {
   assertEquals(filterIncludesKey(filter, { ...testKey, tags: [] }), true);
 });
 
-Deno.test("oneOf must filter correctly", () => {
+Deno.test("filterIncludesKey: oneOf must filter correctly", () => {
   const filter: Filter = {
     oneOf: ["one", "two"],
   };
@@ -58,7 +60,7 @@ Deno.test("oneOf must filter correctly", () => {
     false
   );
 });
-Deno.test("allOf must filter correctly", () => {
+Deno.test("filterIncludesKey: allOf must filter correctly", () => {
   const filter: Filter = {
     allOf: ["one", "two"],
   };
@@ -75,7 +77,7 @@ Deno.test("allOf must filter correctly", () => {
     true
   );
 });
-Deno.test("noneOf must filter correctly", () => {
+Deno.test("filterIncludesKey: noneOf must filter correctly", () => {
   const filter: Filter = {
     noneOf: ["one", "two"],
   };
@@ -92,7 +94,7 @@ Deno.test("noneOf must filter correctly", () => {
     true
   );
 });
-Deno.test("A mixture must filter correctly", () => {
+Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
   const filter: Filter = {
     noneOf: ["one", "two"],
     allOf: ["three"],
