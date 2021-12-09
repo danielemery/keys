@@ -16,7 +16,7 @@ curl "https://keys.demery.com.au/api"
 
 ```sh
 # Consider backup first
-cp ~/.ssh/authorized_keys ~/.ssh/authorized_keys.backup
+cp ~/.ssh/authorized_keys ~/.ssh/authorized_keys.`date '+%Y-%m-%d__%H_%M_%S'`.backup
 # Override file with that remote goodness
 curl "https://keys.demery.com.au/api?allOf=demery&allOf=thunderbird&noneOf=disabled" > ~/.ssh/authorized_keys
 ```
