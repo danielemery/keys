@@ -21,6 +21,7 @@ export function filterIncludesKey(filter: Filter, key: PublicKey) {
     filter.allOf &&
     filter.allOf.find((needle) => !key.tags.find((tag) => tag === needle))
   ) {
+    /** At least one allOf filter could not find it's tag. */
     return false;
   }
 
@@ -28,6 +29,7 @@ export function filterIncludesKey(filter: Filter, key: PublicKey) {
     filter.oneOf &&
     !key.tags.find((needle) => filter.oneOf?.includes(needle))
   ) {
+    /** None of the tags could be found in the oneOf filter. */
     return false;
   }
 
@@ -35,6 +37,7 @@ export function filterIncludesKey(filter: Filter, key: PublicKey) {
     filter.noneOf &&
     key.tags.find((needle) => filter.noneOf?.includes(needle))
   ) {
+    /** At least one of the tags could be found in the noneOf filter. */
     return false;
   }
 
