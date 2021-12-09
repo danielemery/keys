@@ -13,13 +13,13 @@ curl https://keys.demery.com.au/api
 ### Get keys matching single tag (server)
 
 ```sh
-curl https://keys.demery.com.au/api?tag=server
+curl https://keys.demery.com.au/api?oneOf=server
 ```
 
 ### Get keys matching multiple tags (server OR git)
 
 ```sh
-curl https://keys.demery.com.au/api?tag[]=server&tag[]=git
+curl https://keys.demery.com.au/api?oneOf=server&oneOf=git
 ```
 
 ## Usage
