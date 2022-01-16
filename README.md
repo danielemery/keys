@@ -2,14 +2,14 @@
 
 Simple repository to manage and distribute my public ssh keys.
 
-Public keys are stored statically in the repository and hosted at https://keys.demery.com.au
+Public keys are stored statically in the repository and hosted at https://keys.demery.net
 
 ## Example Usage
 
 ### Get all listed keys
 
 ```sh
-curl "https://keys.demery.com.au/api"
+curl "https://keys.demery.net/api"
 ```
 
 ### Get keys for demery account on thunderbird and override authorized_keys file with them
@@ -18,7 +18,7 @@ curl "https://keys.demery.com.au/api"
 # Consider backup first
 cp ~/.ssh/authorized_keys ~/.ssh/authorized_keys.`date '+%Y-%m-%d__%H_%M_%S'`.backup
 # Override file with that remote goodness
-curl "https://keys.demery.com.au/api?allOf=demery&allOf=thunderbird&noneOf=disabled" > ~/.ssh/authorized_keys
+curl "https://keys.demery.net/api?allOf=demery&allOf=thunderbird&noneOf=disabled" > ~/.ssh/authorized_keys
 ```
 
 ## Development
