@@ -25,40 +25,6 @@ const keys: PublicKey[] = [
     tags: ["demery", "github-personal", "thunderbird", "bitbucket-personal"],
     key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC70NKOOwloddsQ1foaSHxnzTjWK481+creWj6rjedBWU4j/d3GEIsfW2vMMnBfZCRca5yqx5oZv6ujyx2iP3EBAlzORVZVBA2DTy15cD8YhL5ntLcW1CV3UxgwMoDyOklGyIzjeqj4nEqUSayWCEo7BiHQ/rLrkpYI9k+LBRiFSQ3csYBUsaIlECRj/9a57u99hKjoc8qUDsf08oA9gQmAO2uUEBEDUDg5WrqLJuUWi9Yll1X0Wl5uLFrm/KYPGmaRG04c1gJfLwc5ZGlN44LrKv7tU6ndetSOMVStfx7mCMg6yt+cD/7L/pYkGfPWQZNK5RqM6pFQaecrNY/qdyQOsKgM1EHA/KDZ96uDSRASGgyAS8szw11lccemzC/KiP/R+FOMoXaNwYvVXw5cijaUNPgSDIZJGITt1afdwMuEwpKj9pCvxXOH6y4Qj2DKLVCy2gNcXE3g+JMKHVa8m3ahcTC5r3j1X+SnVezZ4Y1Dym9sUk0WMpGL6dEssi1LTMc=",
   },
-  {
-    name: "sine-xps-13",
-    tags: [
-      "demery",
-      "disabled",
-      "github-personal",
-      "thunderbird",
-      "bitbucket-sine",
-      "bitbucket-personal",
-    ],
-    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDWsLeX40/yML9hQGibEsTl08QpL7NeKgnio1SYk13FJUQavgXWcYIvcDiK0kHzANOLDNa63LjiqGpvNLQU6d8wHPyx0a0T83khelGEuikUoLDBW6oOKSlC5aGufdsBMDIxbcR0uImiQo2UE4fUQKajG2ShrJ4QvvILPWTba2CAMZpPy/0TFRhLUqbOtkS2YQNDA4wC80sBeyqzfUhRi7KodCLQ53j+6Rbp7UnM0OofYyqGTJQMsAOVA9yTa6MDa+I1ho4SY+TYrDl5cJbIbJqqQV/vJjCEPpubLvO5DVrQQaJIvUOgegU7IpdzovMcdBYPUIwjj9jXjg+jpNJYL64U8XMTz3oeiKp5b2+KcyWPp4kVruwCmVpXpSBvBy07TGCBSnajk9R8e+K85KipVupO8O6Ax4IovmHtk+MHQwTxgdm6qk53RB29c3b2DMsUFAW/gDvpYL2aMk4VjGn5GL1GMpCYE+tmZiMzdk56KDT4kGVvmgJihOhe//VvJlPBtvs=",
-  },
-  {
-    name: "sine-xps-13-keyring",
-    tags: [
-      "demery",
-      "github-personal",
-      "thunderbird",
-      "bitbucket-sine",
-      "bitbucket-personal",
-    ],
-    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIAatA7ahQltP4DtT9sNWmSHlACv743Dh97d21i8AS09RAAAABHNzaDo=",
-  },
-  {
-    name: "sine-xps-13-backup",
-    tags: [
-      "demery",
-      "github-personal",
-      "thunderbird",
-      "bitbucket-sine",
-      "bitbucket-personal",
-    ],
-    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIJwFHVpsYsxC0JkW6SnkrEo+NEd360kcHO73mqCiGMr2AAAABHNzaDo=",
-  },
 ];
 
 export default keys;
