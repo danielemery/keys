@@ -26,9 +26,14 @@ const keys: PublicKey[] = [
     key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC70NKOOwloddsQ1foaSHxnzTjWK481+creWj6rjedBWU4j/d3GEIsfW2vMMnBfZCRca5yqx5oZv6ujyx2iP3EBAlzORVZVBA2DTy15cD8YhL5ntLcW1CV3UxgwMoDyOklGyIzjeqj4nEqUSayWCEo7BiHQ/rLrkpYI9k+LBRiFSQ3csYBUsaIlECRj/9a57u99hKjoc8qUDsf08oA9gQmAO2uUEBEDUDg5WrqLJuUWi9Yll1X0Wl5uLFrm/KYPGmaRG04c1gJfLwc5ZGlN44LrKv7tU6ndetSOMVStfx7mCMg6yt+cD/7L/pYkGfPWQZNK5RqM6pFQaecrNY/qdyQOsKgM1EHA/KDZ96uDSRASGgyAS8szw11lccemzC/KiP/R+FOMoXaNwYvVXw5cijaUNPgSDIZJGITt1afdwMuEwpKj9pCvxXOH6y4Qj2DKLVCy2gNcXE3g+JMKHVa8m3ahcTC5r3j1X+SnVezZ4Y1Dym9sUk0WMpGL6dEssi1LTMc=",
   },
   {
-    name: "tornado-dev",
+    name: "tornado-dev-keyring",
     tags: ["demery", "github-personal", "thunderbird", "bitbucket-personal"],
     key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIAvfL0s9vsXItHcjOdOzC95KH4voq79C1654wINWS+7wAAAABHNzaDo=",
+  },
+  {
+    name: "tornado-dev-home",
+    tags: ["demery", "github-personal", "thunderbird", "bitbucket-personal"],
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOmv3sL4n9tgrFUdK4nYnmFqzG1MzM5sneo+u8RbFVLsAAAABHNzaDo=",
   },
 ];
 
