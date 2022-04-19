@@ -35,6 +35,16 @@ const keys: PublicKey[] = [
     tags: ["demery", "github-personal", "thunderbird", "bitbucket-personal"],
     key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIOmv3sL4n9tgrFUdK4nYnmFqzG1MzM5sneo+u8RbFVLsAAAABHNzaDo=",
   },
+  {
+    name: "de-abusix-keyring",
+    tags: ["demery", "abusix", "github-personal", "thunderbird", "bitbucket-personal"],
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIJ403siz7L3uzTCFwQ7vM5MMnEnOrFhE1XiMxT0hnmDOAAAABHNzaDo=",
+  },
+  {
+    name: "de-abusix-home",
+    tags: ["demery", "abusix", "github-personal", "thunderbird", "bitbucket-personal"],
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAID+ydUByZyo/wUjG1mGpvxWsg6qD1atoSc2wgjkaQlnKAAAABHNzaDo=",
+  },
 ];
 
 export default keys;
