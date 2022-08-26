@@ -12,6 +12,7 @@ const keys: PublicKey[] = [
       "demery",
       // Targets
       "github-personal",
+      "brandenburg",
       "thunderbird",
       "bitbucket-personal",
     ],
@@ -36,6 +37,7 @@ const keys: PublicKey[] = [
       "demery",
       // Targets
       "github-personal",
+      "brandenburg",
       "thunderbird",
       "bitbucket-personal",
     ],
@@ -60,6 +62,7 @@ const keys: PublicKey[] = [
       "demery",
       // Targets
       "github-personal",
+      "brandenburg",
       "thunderbird",
       "bitbucket-personal",
     ],
@@ -72,6 +75,7 @@ const keys: PublicKey[] = [
       "demery",
       // Targets
       "github-personal",
+      "brandenburg",
       "thunderbird",
       "bitbucket-personal",
     ],
@@ -95,6 +99,7 @@ const keys: PublicKey[] = [
       // Targets
       "abusix",
       "github-personal",
+      "brandenburg",
       "thunderbird",
       "bitbucket-personal",
     ],
@@ -108,10 +113,21 @@ const keys: PublicKey[] = [
       // Targets
       "abusix",
       "github-personal",
+      "brandenburg",
       "thunderbird",
       "bitbucket-personal",
     ],
     key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAID+ydUByZyo/wUjG1mGpvxWsg6qD1atoSc2wgjkaQlnKAAAABHNzaDo=",
+  },
+  {
+    name: "foundry",
+    tags: [
+      // User
+      "foundry",
+      // Targets
+      "brandenburg",
+    ],
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDdn8czv0K3twcvlX+5rdEco/zAQun5R5t5gyMy4XZrc4O2y12sV2ZG8FzqfgHpCLN63sHxZwwSeg4NB39wSQ023H/LcqytIIi/FzObce0S7CYZhCqmRGpCSEPhS78Ta44KtUzoCpjhUR34DmDIb7TxcJd30sl6UtGvBPs7efg/Fruux+PM8w6Pb5LA7jdqBmOkfih4jMD9SOrduPYGaH1PwxSW7IQnYtIme5jGH9qJGgJVQB11Pd379co049sxgtaVAPccqOSeC6miQdEku7hQrLapRQGY2RwOQajfibT7rdcKgCJPzc7RNML2OCNfdwCEjBSRf6F0mmfN7VjoFQSkCScmyDvRqScg2GBJasQ8LdtzO+vlnVNbP1NycKEOerRvGKhP/Pghms5OPg18d+8OJLTWQjKA2CKOZGN8htqcz7285rtgTOhYVtcT2E7XZ92l8auWnDNtTnrR2L9xAsmHl5R/74/QoVXjzEvvY9iBPGEreSs9HCWcAurtQ3L/xwc=",
   },
 ];
 
