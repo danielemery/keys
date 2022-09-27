@@ -1,5 +1,6 @@
 export interface PublicKey {
   name: string;
+  user: string;
   tags: string[];
   key: string;
 }
@@ -7,9 +8,8 @@ export interface PublicKey {
 const keys: PublicKey[] = [
   {
     name: "covid-reborn-wsl",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "brandenburg",
       "thunderbird",
@@ -24,9 +24,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "covid-reborn-windows",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "thunderbird",
       // Git Targets
@@ -37,9 +36,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "junior-wsl",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "thunderbird",
       "brandenburg",
@@ -51,9 +49,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "junior-windows",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "thunderbird",
       // Git Targets
@@ -64,9 +61,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "tornado-dev-keyring",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "brandenburg",
       "thunderbird",
@@ -81,9 +77,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "tornado-dev-home",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "brandenburg",
       "thunderbird",
@@ -98,9 +93,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "tornado-dev-rsa",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "linode",
     ],
@@ -108,9 +102,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "de-abusix-keyring",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "brandenburg",
       "thunderbird",
@@ -126,9 +119,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "de-abusix-home",
+    user: "demery",
     tags: [
-      // User
-      "demery",
       // Machine Targets
       "brandenburg",
       "thunderbird",
@@ -144,9 +136,8 @@ const keys: PublicKey[] = [
   },
   {
     name: "foundry",
+    user: "foundry",
     tags: [
-      // User
-      "foundry",
       // Machine Targets
       "brandenburg",
       "foundry",
