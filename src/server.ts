@@ -31,7 +31,7 @@ export default function start(port: number) {
 
         /** Format the public keys in a suitable way for an authorized_keys file. */
         const responseData = filteredKeys
-          .map((key) => `${key.key} ${key.name}`)
+          .map((key) => `${key.key} ${key.user}@${key.name}`)
           .join("\n");
 
         /** Everything worked! We're good to return the keys and OK. */
