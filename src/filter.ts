@@ -2,6 +2,8 @@ import { PublicKey } from "./public_keys.ts";
 
 /** Available filter options. */
 export interface Filter {
+  /** If included only keys marked with the selected user will be returned. */
+  user?: string;
   /** If included only keys with ALL the tags provided will be returned. */
   allOf?: string[];
   /** If included only keys with AT LEAST ONE of the tags provided will be returned. */
@@ -17,6 +19,11 @@ export interface Filter {
  * @returns true if the filter includes the key, false if not.
  */
 export function filterIncludesKey(filter: Filter, key: PublicKey) {
+  if (filter.user && key.user !== filter.user) {
+    /** User filter provided and does not match key. */
+    return false;
+  }
+
   if (
     filter.allOf &&
     filter.allOf.find((needle) => !key.tags.find((tag) => tag === needle))
@@ -60,6 +67,9 @@ export function parseParameters(url: URL): Filter {
   }
   if (params.get("noneOf") !== null) {
     filter.noneOf = params.getAll("noneOf");
+  }
+  if (params.get("user") !== null) {
+    filter.user = params.get("user") ?? undefined;
   }
   return filter;
 }
