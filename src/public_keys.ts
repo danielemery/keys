@@ -11,11 +11,8 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
-      "brandenburg",
+      "acorn",
       "thunderbird",
-      "foundry",
-      "zeppelin",
-      "k8s-xx",
       // Git Targets
       "github-personal",
       "bitbucket-personal",
@@ -27,6 +24,7 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
+      "acorn",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -39,8 +37,8 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
+      "acorn",
       "thunderbird",
-      "brandenburg",
       // Git Targets
       "github-personal",
       "bitbucket-personal",
@@ -52,6 +50,7 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
+      "acorn",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -64,11 +63,8 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
-      "brandenburg",
+      "acorn",
       "thunderbird",
-      "foundry",
-      "zeppelin",
-      "k8s-xx",
       // Git Targets
       "github-personal",
       "bitbucket-personal",
@@ -80,11 +76,8 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
-      "brandenburg",
+      "acorn",
       "thunderbird",
-      "foundry",
-      "zeppelin",
-      "k8s-xx",
       // Git Targets
       "github-personal",
       "bitbucket-personal",
@@ -105,11 +98,8 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
-      "brandenburg",
+      "acorn",
       "thunderbird",
-      "foundry",
-      "zeppelin",
-      "k8s-xx",
       // Git Targets
       "abusix",
       "bitbucket-personal",
@@ -122,11 +112,8 @@ const keys: PublicKey[] = [
     user: "demery",
     tags: [
       // Machine Targets
-      "brandenburg",
+      "acorn",
       "thunderbird",
-      "foundry",
-      "zeppelin",
-      "k8s-xx",
       // Git Targets
       "abusix",
       "github-personal",
@@ -135,18 +122,13 @@ const keys: PublicKey[] = [
     key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAID+ydUByZyo/wUjG1mGpvxWsg6qD1atoSc2wgjkaQlnKAAAABHNzaDo=",
   },
   {
-    name: "foundry",
-    user: "foundry",
+    name: "de-acorn",
+    user: "demery",
     tags: [
-      // Machine Targets
-      "brandenburg",
-      "foundry",
-      "zeppelin",
-      "k8s-xx",
       // Git Targets
       "github-personal",
     ],
-    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDdn8czv0K3twcvlX+5rdEco/zAQun5R5t5gyMy4XZrc4O2y12sV2ZG8FzqfgHpCLN63sHxZwwSeg4NB39wSQ023H/LcqytIIi/FzObce0S7CYZhCqmRGpCSEPhS78Ta44KtUzoCpjhUR34DmDIb7TxcJd30sl6UtGvBPs7efg/Fruux+PM8w6Pb5LA7jdqBmOkfih4jMD9SOrduPYGaH1PwxSW7IQnYtIme5jGH9qJGgJVQB11Pd379co049sxgtaVAPccqOSeC6miQdEku7hQrLapRQGY2RwOQajfibT7rdcKgCJPzc7RNML2OCNfdwCEjBSRf6F0mmfN7VjoFQSkCScmyDvRqScg2GBJasQ8LdtzO+vlnVNbP1NycKEOerRvGKhP/Pghms5OPg18d+8OJLTWQjKA2CKOZGN8htqcz7285rtgTOhYVtcT2E7XZ92l8auWnDNtTnrR2L9xAsmHl5R/74/QoVXjzEvvY9iBPGEreSs9HCWcAurtQ3L/xwc=",
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD4RmySuwXCGyCJVidnov3wHY02/Xlzuf3p8QjuRkPgSUbaYugN0kV16Df2P/F+10+oHAfeJTKs+9xHz0cescSkB1Zfn3TxkfsbzX8al84o7e39ijs+TzROM6VtIo+JLyeUnBIYuBrVmyuZEBbHKM5Q1x/dcpByS8wh0NBjdfFi4aVm9q0xtBb7CmxB3WPVN0ZQ4WeiEptx6XMsXv9BJkL8GEU4l6FOU+WJIah+h4pFRKYcL1JVmFCUVWDUdFPpCcCOmEoFh54ci6giPYqF+GA3oJKzoTscLIfmxcYaOvTWZ4v54L52RTbVF23O9yeljO0+iYm8bynt7dQ3b7rq1Bks6ig6kFDs7o74i1Tkrf6TWt761GqM/etxvqeU2y3Qes5Bajl+8nFIa9qvtMzyZqMa4c1aZfjUGTO93QkS+X3WxrqX8VM8RlPyubS6HlvJZmIofiE2zcq8JUV8gKXLZXgGXFfZARwE5pSEn/F1jYN/Nnar645kNGI5zbojcREfZWU=",
   },
 ];
 
