@@ -12,6 +12,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -25,6 +26,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -38,6 +40,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -51,6 +54,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -64,6 +68,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -77,6 +82,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "github-personal",
@@ -99,6 +105,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "abusix",
@@ -113,6 +120,7 @@ const keys: PublicKey[] = [
     tags: [
       // Machine Targets
       "acorn",
+      "outpost",
       "thunderbird",
       // Git Targets
       "abusix",
