@@ -139,8 +139,8 @@ const keys: PublicKey[] = [
     key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD4RmySuwXCGyCJVidnov3wHY02/Xlzuf3p8QjuRkPgSUbaYugN0kV16Df2P/F+10+oHAfeJTKs+9xHz0cescSkB1Zfn3TxkfsbzX8al84o7e39ijs+TzROM6VtIo+JLyeUnBIYuBrVmyuZEBbHKM5Q1x/dcpByS8wh0NBjdfFi4aVm9q0xtBb7CmxB3WPVN0ZQ4WeiEptx6XMsXv9BJkL8GEU4l6FOU+WJIah+h4pFRKYcL1JVmFCUVWDUdFPpCcCOmEoFh54ci6giPYqF+GA3oJKzoTscLIfmxcYaOvTWZ4v54L52RTbVF23O9yeljO0+iYm8bynt7dQ3b7rq1Bks6ig6kFDs7o74i1Tkrf6TWt761GqM/etxvqeU2y3Qes5Bajl+8nFIa9qvtMzyZqMa4c1aZfjUGTO93QkS+X3WxrqX8VM8RlPyubS6HlvJZmIofiE2zcq8JUV8gKXLZXgGXFfZARwE5pSEn/F1jYN/Nnar645kNGI5zbojcREfZWU=",
   },
   {
-    name: 'utopia-home',
-    user: 'demery',
+    name: "utopia-home",
+    user: "demery",
     tags: [
       // Machine Targets
       "acorn",
@@ -150,11 +150,11 @@ const keys: PublicKey[] = [
       "github-personal",
       "bitbucket-personal",
     ],
-    key: 'sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIHB23BAutvSqH6Rb9kxKluQZMdTV4nacmg46qKdA6JM+AAAABHNzaDo='
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIHB23BAutvSqH6Rb9kxKluQZMdTV4nacmg46qKdA6JM+AAAABHNzaDo=",
   },
   {
-    name: 'utopia-home',
-    user: 'demery',
+    name: "utopia-home",
+    user: "demery",
     tags: [
       // Machine Targets
       "acorn",
@@ -164,7 +164,49 @@ const keys: PublicKey[] = [
       "github-personal",
       "bitbucket-personal",
     ],
-    key: 'sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIFZKAX2vnkVWNuo1z3DI+N2Dd0p3c/oYVuF4R5zDELTCAAAABHNzaDo='
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIFZKAX2vnkVWNuo1z3DI+N2Dd0p3c/oYVuF4R5zDELTCAAAABHNzaDo=",
+  },
+  {
+    name: "homix-home",
+    user: "demery",
+    tags: [
+      // Machine Targets
+      "acorn",
+      "outpost",
+      "thunderbird",
+      // Git Targets
+      "github-personal",
+      "bitbucket-personal",
+    ],
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIJ3Nvlk87FLF3r5hGeDEX8qX0zwtBgvvoHLEPVnBU8edAAAABHNzaDo=",
+  },
+  {
+    name: "homix-keyring",
+    user: "demery",
+    tags: [
+      // Machine Targets
+      "acorn",
+      "outpost",
+      "thunderbird",
+      // Git Targets
+      "github-personal",
+      "bitbucket-personal",
+    ],
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAICAjJChUgcGVHfQt5BgdBx/fpNcqtcy3WmaRCYSjC3GpAAAABHNzaDo=",
+  },
+  {
+    name: "homix-typea",
+    user: "demery",
+    tags: [
+      // Machine Targets
+      "acorn",
+      "outpost",
+      "thunderbird",
+      // Git Targets
+      "github-personal",
+      "bitbucket-personal",
+    ],
+    key: "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMqRpAXHVeIF20k3ugchuJavIWoJQh4ar92fccU17GPkAAAABHNzaDo=",
   },
 ];
 
