@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: denoland/deno:1.16.4
+      - image: denoland/deno:1.33.3
     steps:
       - checkout
       - run:
