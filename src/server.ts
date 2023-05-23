@@ -47,6 +47,6 @@ export default function start(port: number) {
         });
       }
     },
-    { addr: `:${port}` }
+    { addr: `:${port}` },
   );
 }

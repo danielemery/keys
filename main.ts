@@ -1,3 +1,3 @@
-import start from './src/server.ts';
+import start from "./src/server.ts";
 
 start(8000);
