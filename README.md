@@ -2,7 +2,8 @@
 
 Simple repository to manage and distribute my public ssh keys.
 
-Public keys are stored statically in the repository and hosted at https://keys.demery.net
+Public keys are stored statically in the repository and hosted at
+https://keys.demery.net
 
 ## Example Usage
 

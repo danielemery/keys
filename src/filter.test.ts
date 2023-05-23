@@ -26,8 +26,8 @@ Deno.test("parseParameters: must parse complex filter params", () => {
   };
   const actual = parseParameters(
     new URL(
-      "http://domain.com/api?noneOf=not-me&noneOf=or-me&allOf=definitely-me&allOf=and-me&user=user-one"
-    )
+      "http://domain.com/api?noneOf=not-me&noneOf=or-me&allOf=definitely-me&allOf=and-me&user=user-one",
+    ),
   );
   assertEquals(actual, expected);
 });
@@ -47,7 +47,7 @@ Deno.test("filterIncludesKey: empty must filter correctly", () => {
       tags: ["one-tag"],
       user: "user-one",
     }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -55,11 +55,11 @@ Deno.test("filterIncludesKey: empty must filter correctly", () => {
       tags: ["one-tag", "two-tags"],
       user: "user-one",
     }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: [], user: "user-one" }),
-    true
+    true,
   );
 });
 
@@ -70,15 +70,15 @@ Deno.test("filterIncludesKey: oneOf must filter correctly", () => {
 
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: [], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: ["one"], user: "user-one" }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: ["two"], user: "user-one" }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -86,7 +86,7 @@ Deno.test("filterIncludesKey: oneOf must filter correctly", () => {
       tags: ["one", "two"],
       user: "user-one",
     }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -94,7 +94,7 @@ Deno.test("filterIncludesKey: oneOf must filter correctly", () => {
       tags: ["three"],
       user: "user-one",
     }),
-    false
+    false,
   );
 });
 Deno.test("filterIncludesKey: allOf must filter correctly", () => {
@@ -104,15 +104,15 @@ Deno.test("filterIncludesKey: allOf must filter correctly", () => {
 
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: [], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: ["one"], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: ["two"], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -120,7 +120,7 @@ Deno.test("filterIncludesKey: allOf must filter correctly", () => {
       tags: ["one", "two"],
       user: "user-one",
     }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -128,7 +128,7 @@ Deno.test("filterIncludesKey: allOf must filter correctly", () => {
       tags: ["one", "two", "three"],
       user: "user-one",
     }),
-    true
+    true,
   );
 });
 Deno.test("filterIncludesKey: noneOf must filter correctly", () => {
@@ -138,15 +138,15 @@ Deno.test("filterIncludesKey: noneOf must filter correctly", () => {
 
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: [], user: "user-one" }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: ["one"], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: ["two"], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -154,7 +154,7 @@ Deno.test("filterIncludesKey: noneOf must filter correctly", () => {
       tags: ["one", "two"],
       user: "user-one",
     }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -162,7 +162,7 @@ Deno.test("filterIncludesKey: noneOf must filter correctly", () => {
       tags: ["three"],
       user: "user-one",
     }),
-    true
+    true,
   );
 });
 Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
@@ -174,11 +174,11 @@ Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
 
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: [], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, { ...testKey, tags: ["one"], user: "user-one" }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -186,7 +186,7 @@ Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
       tags: ["one", "two", "three"],
       user: "user-one",
     }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -194,7 +194,7 @@ Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
       tags: ["three"],
       user: "user-one",
     }),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -202,7 +202,7 @@ Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
       tags: ["three", "four"],
       user: "user-one",
     }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -210,7 +210,7 @@ Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
       tags: ["three", "five"],
       user: "user-one",
     }),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(filter, {
@@ -218,50 +218,50 @@ Deno.test("filterIncludesKey: A mixture must filter correctly", () => {
       tags: ["four", "five"],
       user: "user-one",
     }),
-    false
+    false,
   );
 });
 Deno.test("filterIncludesKey: User filter must filter correctly", () => {
   assertEquals(
     filterIncludesKey(
       { user: "user-one" },
-      { ...testKey, tags: [], user: "user-one" }
+      { ...testKey, tags: [], user: "user-one" },
     ),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(
       { user: "user-two" },
-      { ...testKey, tags: [], user: "user-one" }
+      { ...testKey, tags: [], user: "user-one" },
     ),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(
       { user: "user-one", allOf: ["match"] },
-      { ...testKey, tags: ["match"], user: "user-one" }
+      { ...testKey, tags: ["match"], user: "user-one" },
     ),
-    true
+    true,
   );
   assertEquals(
     filterIncludesKey(
       { user: "user-two", allOf: ["match"] },
-      { ...testKey, tags: ["match"], user: "user-one" }
+      { ...testKey, tags: ["match"], user: "user-one" },
     ),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(
       { user: "user-one", allOf: ["no_match"] },
-      { ...testKey, tags: ["match"], user: "user-one" }
+      { ...testKey, tags: ["match"], user: "user-one" },
     ),
-    false
+    false,
   );
   assertEquals(
     filterIncludesKey(
       { user: "user-two", allOf: ["no_match"] },
-      { ...testKey, tags: ["match"], user: "user-one" }
+      { ...testKey, tags: ["match"], user: "user-one" },
     ),
-    false
+    false,
   );
 });
