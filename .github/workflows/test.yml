@@ -1,4 +1,4 @@
-name: Build & Test
+name: Test
 
 on:
   push:
@@ -32,3 +32,6 @@ jobs:
         run: |
           deno test --coverage=cov_profile
           deno coverage cov_profile
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
