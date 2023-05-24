@@ -30,8 +30,8 @@ jobs:
 
       - name: Run tests
         run: |
-          deno test --coverage=cov_profile
-          deno coverage cov_profile
+          deno test --coverage=coverage
+          deno coverage ./coverage --lcov > coverage.lcov
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
