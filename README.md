@@ -5,6 +5,8 @@ Simple repository to manage and distribute my public ssh keys.
 Public keys are stored statically in the repository and hosted at
 https://keys.demery.net
 
+[![codecov](https://codecov.io/gh/danielemery/keys/branch/main/graph/badge.svg?token=3F3EN3UY21)](https://codecov.io/gh/danielemery/keys)
+
 ## Example Usage
 
 ### Get all listed keys
