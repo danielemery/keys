@@ -1,6 +1,7 @@
 import { serve, Status, STATUS_TEXT } from "../deps.ts";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
 import keys from "./public_keys.ts";
+import pgp_key from "./pgp_key.ts";
 
 /**
  * Start a simple http server listening on the provided port that listens on `/api` on
@@ -16,10 +17,17 @@ export default function start(port: number) {
         const url = new URL(req.url);
 
         /** Any url that is not `/api` we can simply return a 404. */
-        if (url.pathname !== "/api") {
+        if (url.pathname !== "/api" && url.pathname !== "/pgp.asc") {
           return new Response(undefined, {
             status: Status.NotFound,
             statusText: STATUS_TEXT.get(Status.NotFound),
+          });
+        }
+
+        if(url.pathname === "/pgp.asc") {
+          return new Response(pgp_key, {
+            status: Status.OK,
+            statusText: STATUS_TEXT.get(Status.OK),
           });
         }
 
