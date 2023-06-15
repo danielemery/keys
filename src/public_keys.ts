@@ -108,6 +108,22 @@ const keys: PublicKey[] = [
     key:
       "sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIMqRpAXHVeIF20k3ugchuJavIWoJQh4ar92fccU17GPkAAAABHNzaDo=",
   },
+  {
+    name: "pgp-yubikey",
+    user: "demery",
+    tags: [
+      // Machine Targets
+      "acorn",
+      "outpost",
+      "thunderbird",
+      // Git Targets
+      "abusix",
+      "github-personal",
+      "bitbucket-personal",
+    ],
+    key:
+      "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC6Ezt4eX71ZxvP7shtcniLJI6N0CWFrc3GSHtq3e/HF3LLWqnY5MWmhREuZrBLPhQX75n6uBWmSsbarwWeHzxO6UJCDkv9s/jMPFv3aV1d49qdF2LvEeKAy8lvN6jTINCEyE3g26tcDPavtciDszILdt+/mDrCWDU/+qKxb3I5X4MS+kj342fqPISJ1J4cfNMskyJib2LliWZnMXfAWgsIVM62Jx5WfJnsyXdjKdahUZeeN+2mr9OFr0ElKY1S3pbCds8BSibsarr9MIfWR4e/0DLWWfmpcPmuOX9lB+3g/bFFmcuyUoVhTMxW4tAG+xSOI89GVWBHx27z5MbGxmRfT2xSXb9DG9EA+p0bx4EUeyc6UIYmKk5R+rfVlagNocLqJDTEWDIum/Xq4qyL5mHXvk4gtVV8AKemqjsSGAtZnBEiAenA5vkVohHLWvq0WtkS9MvghOcG2VGAeuyr4muEGqm0BwrYxqXZBjugmhCcF5rFLSGv+h1s09JO0N5Q8eBmQTBrpif2b2ULnwm5xgVimce4VAgAN3QD0JTDqm2o43m7iS4YsoIXgVh/N5rpTWw0y/60eusxlyUC30mat1oSkYWvzXExIIvINpEGAyVieMvnCtSiSID9qQTFEja18G0Z6XN5eY6/u+ES6krZwWPbDs23auuvE+0nZth8Os9hkw==",
+  },
 ];
 
 export default keys;
