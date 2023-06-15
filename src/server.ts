@@ -24,7 +24,7 @@ export default function start(port: number) {
           });
         }
 
-        if(url.pathname === "/pgp.asc") {
+        if (url.pathname === "/pgp.asc") {
           return new Response(pgp_key, {
             status: Status.OK,
             statusText: STATUS_TEXT.get(Status.OK),

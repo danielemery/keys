@@ -1,4 +1,4 @@
-const pgp_key =`-----BEGIN PGP PUBLIC KEY BLOCK-----
+const pgp_key = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
 mQINBGSGYykBEACkuzsJGpKwcPwGUmssEbtlAM51wRqZNK9jAHCwOKMV7YUqhhrD
 vFQRCcYYeLr4bhgN1651ETNGyFstkijc2ei8lEDY/r0kLbmzfxyonIIz863XDTEM
