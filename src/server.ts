@@ -11,50 +11,47 @@ import pgp_key from "./pgp_key.ts";
  */
 export default function start(port: number) {
   console.log(`Server listening at :${port}/api`);
-  serve(
-    (req: Request) => {
-      try {
-        const url = new URL(req.url);
+  serve(handleRequest, { addr: `:${port}` });
+}
 
-        /** Any url that is not `/api` we can simply return a 404. */
-        if (url.pathname !== "/api" && url.pathname !== "/pgp.asc") {
-          return new Response(undefined, {
-            status: Status.NotFound,
-            statusText: STATUS_TEXT.get(Status.NotFound),
-          });
-        }
+export function handleRequest(req: Request) {
+  try {
+    const url = new URL(req.url);
 
-        if (url.pathname === "/pgp.asc") {
-          return new Response(pgp_key, {
-            status: Status.OK,
-            statusText: STATUS_TEXT.get(Status.OK),
-          });
-        }
+    /** Any url that is not `/api` we can simply return a 404. */
+    if (url.pathname !== "/api" && url.pathname !== "/pgp.asc") {
+      return new Response(undefined, {
+        status: Status.NotFound,
+        statusText: STATUS_TEXT.get(Status.NotFound),
+      });
+    }
 
-        /** Parse query params into filters object and filter all public keys. */
-        const filter = parseParameters(url);
-        const filteredKeys = keys.filter((key) =>
-          filterIncludesKey(filter, key)
-        );
+    if (url.pathname === "/pgp.asc") {
+      return new Response(pgp_key, {
+        status: Status.OK,
+        statusText: STATUS_TEXT.get(Status.OK),
+      });
+    }
 
-        /** Format the public keys in a suitable way for an authorized_keys file. */
-        const responseData = filteredKeys
-          .map((key) => `${key.key} ${key.user}@${key.name}`)
-          .join("\n");
+    /** Parse query params into filters object and filter all public keys. */
+    const filter = parseParameters(url);
+    const filteredKeys = keys.filter((key) => filterIncludesKey(filter, key));
 
-        /** Everything worked! We're good to return the keys and OK. */
-        return new Response(responseData, {
-          status: Status.OK,
-          statusText: STATUS_TEXT.get(Status.OK),
-        });
-      } catch (err) {
-        console.error(err);
-        return new Response(undefined, {
-          status: Status.InternalServerError,
-          statusText: STATUS_TEXT.get(Status.InternalServerError),
-        });
-      }
-    },
-    { addr: `:${port}` },
-  );
+    /** Format the public keys in a suitable way for an authorized_keys file. */
+    const responseData = filteredKeys
+      .map((key) => `${key.key} ${key.user}@${key.name}`)
+      .join("\n");
+
+    /** Everything worked! We're good to return the keys and OK. */
+    return new Response(responseData, {
+      status: Status.OK,
+      statusText: STATUS_TEXT.get(Status.OK),
+    });
+  } catch (err) {
+    console.error(err);
+    return new Response(undefined, {
+      status: Status.InternalServerError,
+      statusText: STATUS_TEXT.get(Status.InternalServerError),
+    });
+  }
 }
