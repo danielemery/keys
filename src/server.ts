@@ -1,4 +1,4 @@
-import { serve, Status, STATUS_TEXT } from "../deps.ts";
+import { Status, STATUS_TEXT } from "../deps.ts";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
 import keys from "./public_keys.ts";
 import pgp_key from "./pgp_key.ts";
@@ -11,8 +11,9 @@ import pgp_key from "./pgp_key.ts";
  */
 export default function start(port: number) {
   console.log(`Server listening at :${port}/api`);
-  serve(
-    (req: Request) => {
+  Deno.serve({
+    port,
+    handler: (req: Request) => {
       try {
         const url = new URL(req.url);
 
@@ -20,14 +21,14 @@ export default function start(port: number) {
         if (url.pathname !== "/api" && url.pathname !== "/pgp.asc") {
           return new Response(undefined, {
             status: Status.NotFound,
-            statusText: STATUS_TEXT.get(Status.NotFound),
+            statusText: STATUS_TEXT[Status.NotFound],
           });
         }
 
         if (url.pathname === "/pgp.asc") {
           return new Response(pgp_key, {
             status: Status.OK,
-            statusText: STATUS_TEXT.get(Status.OK),
+            statusText: STATUS_TEXT[Status.OK],
           });
         }
 
@@ -45,16 +46,15 @@ export default function start(port: number) {
         /** Everything worked! We're good to return the keys and OK. */
         return new Response(responseData, {
           status: Status.OK,
-          statusText: STATUS_TEXT.get(Status.OK),
+          statusText: STATUS_TEXT[Status.OK],
         });
       } catch (err) {
         console.error(err);
         return new Response(undefined, {
           status: Status.InternalServerError,
-          statusText: STATUS_TEXT.get(Status.InternalServerError),
+          statusText: STATUS_TEXT[Status.InternalServerError],
         });
       }
     },
-    { addr: `:${port}` },
-  );
+  });
 }
