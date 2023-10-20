@@ -62,6 +62,27 @@ Deno.test("handleRequest: must return pgp key for /pgp", async () => {
 });
 
 Deno.test(
+  "handleRequest: must return pgp key with headers for download for /pgp/daniel_emery.pub.asc",
+  async () => {
+    const response = await handleRequest(
+      new Request(`${TEST_URL}/pgp/daniel_emery.pub.asc`),
+      emptyDependencies,
+    );
+
+    assertEquals(response.status, 200);
+    assertEquals(response.statusText, "OK");
+    assertStringIncludes(
+      await response.text(),
+      "-----BEGIN PGP PUBLIC KEY BLOCK-----",
+    );
+    assertEquals(
+      response.headers.get("Content-Disposition"),
+      "attachment; filename=daniel_emery.pub.asc",
+    );
+  },
+);
+
+Deno.test(
   "handleRequest: must call appropriate functions and return keys",
   async () => {
     const parseParametersSpy = spy(parseParameters);
