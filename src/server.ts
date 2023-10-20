@@ -21,18 +21,19 @@ export function handleRequest(req: Request) {
   try {
     const url = new URL(req.url);
 
-    /** Any url that is not `/api` we can simply return a 404. */
-    if (url.pathname !== "/api" && url.pathname !== "/pgp.asc") {
-      return new Response(undefined, {
-        status: Status.NotFound,
-        statusText: STATUS_TEXT[Status.NotFound],
-      });
-    }
-
+    /** If the url is pgp.asc return static public pgp key */
     if (url.pathname === "/pgp.asc") {
       return new Response(pgp_key, {
         status: Status.OK,
         statusText: STATUS_TEXT[Status.OK],
+      });
+    }
+
+    /** Any other url that is not `/api` we can simply return a 404. */
+    if (url.pathname !== "/api") {
+      return new Response(undefined, {
+        status: Status.NotFound,
+        statusText: STATUS_TEXT[Status.NotFound],
       });
     }
 
