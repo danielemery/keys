@@ -33,7 +33,7 @@ export function handleRequest(req: Request, dependencies: ServerDependencies) {
     const url = new URL(req.url);
 
     /** If the url is pgp.asc return static public pgp key */
-    if (url.pathname === "/pgp.asc") {
+    if (url.pathname === "/pgp") {
       return new Response(pgp_key, {
         status: Status.OK,
         statusText: STATUS_TEXT[Status.OK],

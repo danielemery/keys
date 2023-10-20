@@ -47,9 +47,9 @@ Deno.test(
   },
 );
 
-Deno.test("handleRequest: must return pgp key for /pgp.asc", async () => {
+Deno.test("handleRequest: must return pgp key for /pgp", async () => {
   const response = await handleRequest(
-    new Request(`${TEST_URL}/pgp.asc`),
+    new Request(`${TEST_URL}/pgp`),
     emptyDependencies,
   );
 
