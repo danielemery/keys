@@ -4,7 +4,7 @@ import { filterIncludesKey, parseParameters } from "./filter.ts";
 import {
   assertEquals,
   assertStringIncludes,
-} from "https://deno.land/std@0.204.0/testing/asserts.ts";
+} from "https://deno.land/std@0.204.0/assert/mod.ts";
 import {
   assertSpyCall,
   assertSpyCalls,
