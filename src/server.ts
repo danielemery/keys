@@ -4,20 +4,31 @@ import keys from "./public_keys.ts";
 import pgp_key from "./pgp_key.ts";
 
 /**
+ * The dependencies required by the server.
+ * We use this to make it easier to mock the dependencies in tests.
+ */
+export interface ServerDependencies {
+  filterIncludesKey: typeof filterIncludesKey;
+  parseParameters: typeof parseParameters;
+  keys: typeof keys;
+}
+
+/**
  * Start a simple http server listening on the provided port that listens on `/api` on
  * the provided port and provides authorized keys based on query string filter
  * parameters.
  * @param port The port to listen on.
  */
-export default function start(port: number) {
+export default function start(port: number, dependencies: ServerDependencies) {
   console.log(`Server listening at :${port}/api`);
   Deno.serve({
     port,
-    handler: handleRequest,
+    handler: (req) => handleRequest(req, dependencies),
   });
 }
 
-export function handleRequest(req: Request) {
+export function handleRequest(req: Request, dependencies: ServerDependencies) {
+  const { filterIncludesKey, parseParameters, keys } = dependencies;
   try {
     const url = new URL(req.url);
 
