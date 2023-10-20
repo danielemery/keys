@@ -13,6 +13,21 @@ import {
 
 const TEST_URL = "http://localhost";
 
+const fakeKeys = [
+  {
+    name: "key-1",
+    user: "user",
+    tags: ["private"],
+    key: "ssh-rsa fake1",
+  },
+  {
+    name: "key-2",
+    user: "user",
+    tags: ["public"],
+    key: "ssh-rsa fake2",
+  },
+];
+
 const emptyDependencies: ServerDependencies = {
   filterIncludesKey: () => false,
   parseParameters: () => ({}),
@@ -49,22 +64,41 @@ Deno.test("handleRequest: must return pgp key for /pgp.asc", async () => {
 Deno.test(
   "handleRequest: must call appropriate functions and return keys",
   async () => {
-    const parseParametersStub = spy(parseParameters);
+    const parseParametersSpy = spy(parseParameters);
+    const filterIncludesKeySpy = spy(filterIncludesKey);
+
+    const url = `${TEST_URL}/api?oneOf=private&noneOf=public&noneOf=github`;
+
+    const response = await handleRequest(new Request(url), {
+      parseParameters: parseParametersSpy,
+      filterIncludesKey: filterIncludesKeySpy,
+      keys: fakeKeys,
+    });
+
+    assertSpyCalls(parseParametersSpy, 1);
+    assertSpyCall(parseParametersSpy, 0, {
+      args: [new URL(url)],
+    });
+
+    assertSpyCalls(filterIncludesKeySpy, 2);
+    assertSpyCall(filterIncludesKeySpy, 0, {
+      args: [{ oneOf: ["private"], noneOf: ["public", "github"] }, fakeKeys[0]],
+    });
+
+    assertEquals(response.status, 200);
+    assertEquals(response.statusText, "OK");
+    assertEquals(await response.text(), "ssh-rsa fake1 user@key-1");
+  },
+);
+
+Deno.test(
+  "handleRequest: must return 500 if unexpected error is thrown",
+  async () => {
+    const throwingParseParameters: typeof parseParameters = () => {
+      throw new Error("Unexpected error");
+    };
+    const parseParametersStub = spy(throwingParseParameters);
     const filterIncludesKeyStub = spy(filterIncludesKey);
-    const fakeKeys = [
-      {
-        name: "key-1",
-        user: "user",
-        tags: ["private"],
-        key: "ssh-rsa fake1",
-      },
-      {
-        name: "key-2",
-        user: "user",
-        tags: ["public"],
-        key: "ssh-rsa fake2",
-      },
-    ];
 
     const url = `${TEST_URL}/api?oneOf=private&noneOf=public&noneOf=github`;
 
@@ -79,13 +113,9 @@ Deno.test(
       args: [new URL(url)],
     });
 
-    assertSpyCalls(filterIncludesKeyStub, 2);
-    assertSpyCall(filterIncludesKeyStub, 0, {
-      args: [{ oneOf: ["private"], noneOf: ["public", "github"] }, fakeKeys[0]],
-    });
+    assertSpyCalls(filterIncludesKeyStub, 0);
 
-    assertEquals(response.status, 200);
-    assertEquals(response.statusText, "OK");
-    assertEquals(await response.text(), "ssh-rsa fake1 user@key-1");
+    assertEquals(response.status, 500);
+    assertEquals(response.statusText, "Internal Server Error");
   },
 );
