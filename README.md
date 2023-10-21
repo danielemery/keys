@@ -29,7 +29,7 @@ curl "https://keys.demery.net/api?allOf=demery&allOf=thunderbird&noneOf=disabled
 ### Running locally
 
 ```sh
-deno run --allow-net main.ts
+deno run --allow-net --allow-env main.ts
 ```
 
 ### Run tests
@@ -44,5 +44,7 @@ deno test
 
 ```sh
 docker build -t keys:latest .
-docker run -p 8000:8000 keys:latest
+
+# Run, exposing port 8000 (inner port is always 80)
+docker run -p 8000:80 keys:latest
 ```
