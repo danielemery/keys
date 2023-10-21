@@ -1,5 +1,9 @@
 FROM denoland/deno:1.37.1
 
+# Application listens on port 80.
+ENV PORT=80
+EXPOSE $PORT
+
 WORKDIR /app
 
 # Prefer not to run as root.
