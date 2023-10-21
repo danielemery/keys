@@ -13,7 +13,7 @@ Deno.test(
     };
 
     assertEquals(parseEnvironmentVariables(variables), { PORT: 1234 });
-  }
+  },
 );
 Deno.test(
   "parseEnvironmentVariables: must use defaults if variables are not supplied",
@@ -21,12 +21,15 @@ Deno.test(
     const variables = {};
 
     assertEquals(parseEnvironmentVariables(variables), { PORT: 8000 });
-  }
+  },
 );
-Deno.test("parseEnvironmentVariables: must throw ZodError if input is invalid", () => {
-  const variables = {
-    PORT: "not-a-number",
-  };
+Deno.test(
+  "parseEnvironmentVariables: must throw ZodError if input is invalid",
+  () => {
+    const variables = {
+      PORT: "not-a-number",
+    };
 
-  assertThrows(() => parseEnvironmentVariables(variables), ZodError);
-});
+    assertThrows(() => parseEnvironmentVariables(variables), ZodError);
+  },
+);
