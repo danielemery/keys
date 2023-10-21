@@ -1,8 +1,5 @@
 FROM denoland/deno:1.37.1
 
-# The port that your application listens to.
-EXPOSE 8000
-
 WORKDIR /app
 
 # Prefer not to run as root.
