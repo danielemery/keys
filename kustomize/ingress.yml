@@ -2,7 +2,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: demery-net-keys
-  namespace: demery-net
   annotations:
     kubernetes.io/ingress.class: "nginx"
     nginx.com/health-checks: "true"
