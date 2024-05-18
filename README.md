@@ -29,7 +29,7 @@ curl "https://keys.demery.net/api?allOf=demery&allOf=thunderbird&noneOf=disabled
 ### Running locally
 
 ```sh
-deno run --allow-net --allow-env main.ts
+doppler run -- deno run --allow-net --allow-env main.ts
 ```
 
 ### Run tests
