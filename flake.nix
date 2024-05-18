@@ -20,6 +20,7 @@
             nativeBuildInputs = [ pkgs.bashInteractive ];
             buildInputs = with pkgs; [
               deno
+              doppler
             ];
           };
         });
