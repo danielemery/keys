@@ -1,4 +1,4 @@
-import { Status, STATUS_TEXT } from "../deps.ts";
+import { STATUS_CODE, STATUS_TEXT } from "../deps.ts";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
 import keys from "./public_keys.ts";
 import pgp_key from "./pgp_key.ts";
@@ -35,16 +35,16 @@ export function handleRequest(req: Request, dependencies: ServerDependencies) {
     /** If the url is /pgp return static public pgp key. */
     if (url.pathname === "/pgp") {
       return new Response(pgp_key, {
-        status: Status.OK,
-        statusText: STATUS_TEXT[Status.OK],
+        status: STATUS_CODE.OK,
+        statusText: STATUS_TEXT[STATUS_CODE.OK],
       });
     }
 
     /** If the url is /pgp/daniel_emery.pub.asc return the keys with headers indicating download is preferred. */
     if (url.pathname === "/pgp/daniel_emery.pub.asc") {
       return new Response(pgp_key, {
-        status: Status.OK,
-        statusText: STATUS_TEXT[Status.OK],
+        status: STATUS_CODE.OK,
+        statusText: STATUS_TEXT[STATUS_CODE.OK],
         headers: {
           "Content-Disposition": "attachment; filename=daniel_emery.pub.asc",
         },
@@ -54,8 +54,8 @@ export function handleRequest(req: Request, dependencies: ServerDependencies) {
     /** Any other url that is not `/api` we can simply return a 404. */
     if (url.pathname !== "/api") {
       return new Response(undefined, {
-        status: Status.NotFound,
-        statusText: STATUS_TEXT[Status.NotFound],
+        status: STATUS_CODE.NotFound,
+        statusText: STATUS_TEXT[STATUS_CODE.NotFound],
       });
     }
 
@@ -70,14 +70,14 @@ export function handleRequest(req: Request, dependencies: ServerDependencies) {
 
     /** Everything worked! We're good to return the keys and OK. */
     return new Response(responseData, {
-      status: Status.OK,
-      statusText: STATUS_TEXT[Status.OK],
+      status: STATUS_CODE.OK,
+      statusText: STATUS_TEXT[STATUS_CODE.OK],
     });
   } catch (err) {
     console.error(err);
     return new Response(undefined, {
-      status: Status.InternalServerError,
-      statusText: STATUS_TEXT[Status.InternalServerError],
+      status: STATUS_CODE.InternalServerError,
+      statusText: STATUS_TEXT[STATUS_CODE.InternalServerError],
     });
   }
 }
