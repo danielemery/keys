@@ -3,19 +3,27 @@ name: Publish
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  packages: write
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  docker-publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup repo
+      - name: Checkout
         uses: actions/checkout@v3
+
+      - uses: nowsprinting/check-version-format-action@v3
+        id: version
+        with:
+          prefix: "v"
 
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
@@ -37,3 +45,32 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  helm-publish:
+    needs:
+      - docker-publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: nowsprinting/check-version-format-action@v3
+        id: version
+        with:
+          prefix: "v"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.HELM_DEPLOY_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.HELM_DEPLOY_SECRET }}
+          aws-region: ${{ vars.HELM_DEPLOY_REGION }}
+
+      - name: Publish chart
+        uses: danielemery/helm-release-action@f19adb815088a067bb839b224decb0611072652d
+        with:
+          repo: s3://helm.demery.net/
+          chart: ./helm
+          version: ${{ steps.version.outputs.full }}
+          appVersion: ${{ steps.version.outputs.full }}
