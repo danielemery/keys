@@ -1,6 +1,4 @@
-client:
-  registry: ghcr.io/danielemery/keys
-  version: v1.0.0
-  dopplerSecretName: "doppler-keys-secret"
-docker:
-  registrySecretName: registry-github-danielemery
+registry: ghcr.io/danielemery/keys
+version: v1.0.0
+dopplerSecretName: doppler-keys-secret
+registrySecretName: registry-github-danielemery
