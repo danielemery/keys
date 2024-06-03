@@ -8,4 +8,4 @@ spec:
   ports:
     - port: 80
       name: http-web
-      targetPort: 80
+      targetPort: 8000
