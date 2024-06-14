@@ -67,6 +67,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.HELM_DEPLOY_SECRET }}
           aws-region: ${{ vars.HELM_DEPLOY_REGION }}
 
+      # Replace the values.yaml version field with the new version
+      - name: Update image version in the values.yaml
+        run: |
+          sed -i "s/REPLACED_BY_CI/${{ steps.version.outputs.full }}/g" helm/values.yaml
+
       - name: Publish chart
         uses: danielemery/helm-release-action@f19adb815088a067bb839b224decb0611072652d
         with:

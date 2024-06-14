@@ -1,4 +1,4 @@
 registry: ghcr.io/danielemery/keys
-version: v1.0.0
+version: REPLACED_BY_CI
 dopplerSecretName: doppler-keys-secret
 registrySecretName: registry-github-danielemery
