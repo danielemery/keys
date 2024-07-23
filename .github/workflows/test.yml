@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Setup repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Deno
         uses: denoland/setup-deno@v1
         with:
-          deno-version: v1.37.1
+          deno-version: v1.45.2
 
       - name: Verify formatting
         run: deno fmt --check
@@ -34,4 +34,6 @@ jobs:
           deno coverage ./coverage --lcov --output=coverage.lcov
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
