@@ -1,4 +1,4 @@
-import { STATUS_CODE, STATUS_TEXT } from "../deps.ts";
+import { STATUS_CODE, STATUS_TEXT } from "@std/http";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
 import keys from "./public_keys.ts";
 import pgp_key from "./pgp_key.ts";
