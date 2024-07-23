@@ -1,0 +1,9 @@
+apiVersion: v2
+name: keys
+description: Personal SSH/GPG keys api.
+
+type: application
+
+version: 0.0.0
+
+appVersion: "0.0.0"

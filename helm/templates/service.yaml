@@ -1,12 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: demery-net-keys-svc
-  namespace: demery-net
+  name: {{ .Release.Name }}-svc
 spec:
   selector:
-    app: demery-net-keys
+    app: {{ .Release.Name }}
   ports:
     - port: 80
-      name: http
+      name: http-web
       targetPort: 8000
