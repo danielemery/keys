@@ -29,6 +29,9 @@ jobs:
         run: deno lint
 
       - name: Run tests
+        env:
+          DOPPLER_ENVIRONMENT: gitlab_ci
+          KEYS_VERSION: gitlab_ci
         run: |
           deno test --coverage=coverage
           deno coverage ./coverage --lcov --output=coverage.lcov
