@@ -28,7 +28,7 @@ spec:
             - name: http-web
               containerPort: 8000
           env:
-            - name: VERSION
+            - name: KEYS_VERSION
               value: {{ .Values.version | quote }}
           envFrom:
             - secretRef:
