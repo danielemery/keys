@@ -5,28 +5,43 @@ import {
 import { parseEnvironmentVariables } from "./environment.ts";
 import { ZodError } from "../deps.ts";
 
+const baseVariables = {
+  DOPPLER_ENVIRONMENT: "unit_tests",
+  KEYS_VERSION: "unit_tests",
+};
+
 Deno.test(
   "parseEnvironmentVariables: must convert string variables to correct types",
   () => {
     const variables = {
+      ...baseVariables,
       PORT: "1234",
     };
 
-    assertEquals(parseEnvironmentVariables(variables), { PORT: 1234 });
+    assertEquals(parseEnvironmentVariables(variables), {
+      ...baseVariables,
+      PORT: 1234,
+    });
   },
 );
 Deno.test(
   "parseEnvironmentVariables: must use defaults if variables are not supplied",
   () => {
-    const variables = {};
+    const variables = {
+      ...baseVariables,
+    };
 
-    assertEquals(parseEnvironmentVariables(variables), { PORT: 8000 });
+    assertEquals(parseEnvironmentVariables(variables), {
+      ...baseVariables,
+      PORT: 8000,
+    });
   },
 );
 Deno.test(
   "parseEnvironmentVariables: must throw ZodError if input is invalid",
   () => {
     const variables = {
+      ...baseVariables,
       PORT: "not-a-number",
     };
 
