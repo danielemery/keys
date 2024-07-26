@@ -10,6 +10,8 @@ if (environment.SENTRY_DSN) {
   Sentry.init({
     dsn: environment.SENTRY_DSN,
     environment: environment.DOPPLER_ENVIRONMENT,
+    tracesSampleRate: 1.0,
+    release: environment.KEYS_VERSION,
   });
 }
 
