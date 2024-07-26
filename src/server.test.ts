@@ -40,6 +40,7 @@ Deno.test(
     const response = await handleRequest(
       new Request(`${TEST_URL}/not_found`),
       emptyDependencies,
+      "unit_tests",
     );
 
     assertEquals(response.status, 404);
@@ -51,6 +52,7 @@ Deno.test("handleRequest: must return pgp key for /pgp", async () => {
   const response = await handleRequest(
     new Request(`${TEST_URL}/pgp`),
     emptyDependencies,
+    "unit_tests",
   );
 
   assertEquals(response.status, 200);
@@ -67,6 +69,7 @@ Deno.test(
     const response = await handleRequest(
       new Request(`${TEST_URL}/pgp/daniel_emery.pub.asc`),
       emptyDependencies,
+      "unit_tests",
     );
 
     assertEquals(response.status, 200);
@@ -94,7 +97,7 @@ Deno.test(
       parseParameters: parseParametersSpy,
       filterIncludesKey: filterIncludesKeySpy,
       keys: fakeKeys,
-    });
+    }, "unit_tests");
 
     assertSpyCalls(parseParametersSpy, 1);
     assertSpyCall(parseParametersSpy, 0, {
@@ -127,7 +130,7 @@ Deno.test(
       parseParameters: parseParametersStub,
       filterIncludesKey: filterIncludesKeyStub,
       keys: fakeKeys,
-    });
+    }, "unit_tests");
 
     assertSpyCalls(parseParametersStub, 1);
     assertSpyCall(parseParametersStub, 0, {

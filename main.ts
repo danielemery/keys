@@ -15,8 +15,12 @@ if (environment.SENTRY_DSN) {
   });
 }
 
-start(environment.PORT, {
-  filterIncludesKey,
-  parseParameters,
-  keys,
-});
+start(
+  environment.PORT,
+  {
+    filterIncludesKey,
+    parseParameters,
+    keys,
+  },
+  environment.KEYS_VERSION,
+);

@@ -19,15 +19,23 @@ export interface ServerDependencies {
  * parameters.
  * @param port The port to listen on.
  */
-export default function start(port: number, dependencies: ServerDependencies) {
+export default function start(
+  port: number,
+  dependencies: ServerDependencies,
+  version: string,
+) {
   console.log(`Server listening at :${port}/api`);
   Deno.serve({
     port,
-    handler: (req) => handleRequest(req, dependencies),
+    handler: (req) => handleRequest(req, dependencies, version),
   });
 }
 
-export function handleRequest(req: Request, dependencies: ServerDependencies) {
+export function handleRequest(
+  req: Request,
+  dependencies: ServerDependencies,
+  version: string,
+) {
   const { filterIncludesKey, parseParameters, keys } = dependencies;
   try {
     const url = new URL(req.url);
@@ -72,6 +80,9 @@ export function handleRequest(req: Request, dependencies: ServerDependencies) {
     return new Response(responseData, {
       status: STATUS_CODE.OK,
       statusText: STATUS_TEXT[STATUS_CODE.OK],
+      headers: {
+        "X-Keys-Version": version,
+      },
     });
   } catch (err) {
     console.error(err);
