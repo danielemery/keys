@@ -1,0 +1,25 @@
+{
+  "name": "Keys API Development Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "denoland.vscode-deno",
+        "doppler.doppler-vscode",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/itsmechlark/features/doppler:2": {
+      "version": "latest"
+    }
+  },
+  "portsAttributes": {
+    "8000": {
+      "label": "Keys API"
+    }
+  }
+}
