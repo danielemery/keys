@@ -32,7 +32,7 @@ spec:
               value: {{ .Values.version | quote }}
           envFrom:
             - secretRef:
-                name: {{ .Values.dopplerSecretName }}
+                name: {{ .Values.secretName }}
       {{- if .Values.registrySecretName }}
       imagePullSecrets:
         - name: {{ .Values.registrySecretName }}
