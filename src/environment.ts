@@ -5,6 +5,7 @@ const environmentSchema = z.object({
   DOPPLER_ENVIRONMENT: z.string(),
   SENTRY_DSN: z.string().optional(),
   KEYS_VERSION: z.string(),
+  CONFIG_PATH: z.string().optional().default("/config.yaml"),
 });
 
 export function parseEnvironmentVariables(variableObject: unknown) {
