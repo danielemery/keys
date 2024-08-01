@@ -1,13 +1,25 @@
 # Keys
 
-Simple repository to manage and distribute my public ssh keys.
+Simple repository to manage and distribute ssh keys.
 
-Public keys are stored statically in the repository and hosted at
-https://keys.demery.net
+To see a production implementation of this app feel free to visit
+https://keys.demery.net/api
+
+Public keys are provided in a configuration file at application start. The
+application has no persistence layer and is stateless.
 
 [![codecov](https://codecov.io/gh/danielemery/keys/branch/main/graph/badge.svg?token=3F3EN3UY21)](https://codecov.io/gh/danielemery/keys)
 
 ## Example Usage
+
+Typically the purpose of keys is to override the `authorized_keys` file for a
+machine. This is currently done with manual curl commands, and not typically
+automated with a CRON due to the risk of losing access to machines as a result
+of the service being down or misconfigured.
+
+In the future ([#24](https://github.com/danielemery/keys/issues/24)) a cli tool
+will be provided to safely manage the `authorized_keys` file with guards in
+place to prevent loss of access.
 
 ### Get all listed keys
 
@@ -15,13 +27,89 @@ https://keys.demery.net
 curl "https://keys.demery.net/api"
 ```
 
-### Get keys for demery account on thunderbird and override authorized_keys file with them
+### Update authorized keys file
+
+_Get keys for the `demery` user with the `oak` tag and excluding the `disabled`
+tag and override the `authorized_keys` file with them_
 
 ```sh
 # Consider backup first
 cp ~/.ssh/authorized_keys ~/.ssh/authorized_keys.`date '+%Y-%m-%d__%H_%M_%S'`.backup
-# Override file with that remote goodness
-curl "https://keys.demery.net/api?allOf=demery&allOf=thunderbird&noneOf=disabled" > ~/.ssh/authorized_keys
+# Override file with the matching keys
+curl "https://keys.demery.net/api?user=demery&allOf=oak&noneOf=disabled" > ~/.ssh/authorized_keys
+# Check that they keys were updated with what you expected
+cat ~/.ssh/authorized_keys
+```
+
+## Running / Installation
+
+### Helm
+
+#### Secret Creation
+
+The recommended method of deploying the `keys` application is using the official
+helm chart.
+
+Before deployment, it's expected to have a secret created within the target
+namespace that contains the environment variable configuration for the
+application. This secret is expected to be named `keys-secret` but can be
+overriden by setting the `secrets.secretName` value in the helm chart.
+
+The secret could be created using doppler (see
+[Doppler docs](./docs/DOPPLER.md)) or another secrets solution. Or by simply
+creating the secret file manually (recommended for one-off tests).
+
+Manual secret creation:
+
+1. Create a new namespace in your cluster for the test
+   ```sh
+   kubectl create namespace keys-test
+   ```
+2. Create the secret file
+   ```sh
+   kubectl create secret generic keys-secret \
+     --from-literal=DOPPLER_ENVIRONMENT=local-helm-test
+   ```
+
+#### Chart Repository
+
+The following assumes you have created the namespace and secrets as
+[described above](#secret-creation).
+
+```sh
+helm repo add keys https://helm.demery.net
+helm repo update
+helm install -n keys-test --set version=v2.0.0 --set configFile.content="$(cat ./examples/keys-config.yaml)" keys demery/keys
+```
+
+### Docker
+
+The `keys` application is packaged in docker and the image can be found in the
+[Github registry](https://ghcr.io/danielemery/keys).
+
+_The inner container port is always **8000** unless overriden with the `PORT`
+environment variable. Note that port **80** cannot be used due to limitations of
+the way Deno handles permissions._
+
+```sh
+docker run \
+  -p 8000:8000 \
+  -v $(pwd)/examples/keys-config.yaml:/config.yaml \
+  -e DOPPLER_ENVIRONMENT=local-docker \
+  -e KEYS_VERSION=local-docker \
+  ghcr.io/danielemery/keys:latest
+```
+
+#### Docker Compose
+
+When using docker instead of the helm chart it's recommended to use a
+docker-compose file.
+
+An example is provided in `examples/docker-compose.yaml` and can be run with the
+following command:
+
+```sh
+docker compose -f examples/docker-compose.yaml up
 ```
 
 ## Development
@@ -47,15 +135,34 @@ deno run --env --allow-net --allow-env --allow-read main.ts
 deno test
 ```
 
-### Running with docker
+### Local Helm Chart
 
-## Local build
+It can be useful to run the chart directly from the repository for testing or
+for using the chart with a version that has not yet been published.
+
+1. Install the chart
+   ```sh
+   # Replace the version with the desired version. It will need to be a version that exists in the Github registry.
+   helm install -n keys-test --set version=v2.0.0 --set configFile.content="$(cat ./examples/keys-config.yaml)" keys ./helm
+   ```
+2. Port forward to the service for testing
+   ```sh
+   kubectl -n keys-test port-forward svc/keys-svc 8000:80
+   ```
+
+### Local Docker Build
+
+It can also be useful to build the docker image locally for testing of
+`Dockerfile` changes. This can be done with the following commands:
 
 ```sh
-docker build -t keys:latest .
-
-# Run, exposing port 8000 (inner port is always 80)
-docker run -p 8000:80 keys:latest
+docker build -t keys:local .
+docker run \
+  -p 8000:8000 \
+  -v $(pwd)/examples/keys-config.yaml:/config.yaml \
+  -e DOPPLER_ENVIRONMENT=local-docker \
+  -e KEYS_VERSION=local-docker \
+  keys:local
 ```
 
 ### Branch / Release strategy
