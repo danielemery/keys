@@ -33,5 +33,7 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.dopplerSecretName }}
+      {{- if .Values.registrySecretName }}
       imagePullSecrets:
         - name: {{ .Values.registrySecretName }}
+      {{- end }}
