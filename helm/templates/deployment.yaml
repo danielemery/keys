@@ -33,6 +33,15 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.dopplerSecretName }}
+          volumeMounts:
+            - name: config-volume
+              mountPath: {{ .Values.configFile.mountPath }}
+              subPath: {{ .Values.configFile.name }}
+              readOnly: true
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-config
       {{- if .Values.registrySecretName }}
       imagePullSecrets:
         - name: {{ .Values.registrySecretName }}

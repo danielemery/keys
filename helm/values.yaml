@@ -1,3 +1,7 @@
 registry: ghcr.io/danielemery/keys
 version: REPLACED_BY_CI
 dopplerSecretName: doppler-keys-secret
+
+configFile:
+  name: config.yaml
+  mountPath: /config.yaml
