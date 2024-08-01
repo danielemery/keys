@@ -1,0 +1,12 @@
+ssh-keys:
+  - name: covid-reborn-windows
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC3o6dpyLFuyDfqhc84es4R2xNE+AhsKKqKJNxs6eyLcqIf9dezH8BD9Ye6E0BoupeZwJx9CL3wwZFmdpHEYmdLb1e7PRxx0hf/6nLRBI5+34gKukj3dZtAhZuiGOQ3sKl6iOqCTi499cRBi2TxdH2xS9n0sZCIWFLuvVzyYy+AX9F1hSTCkVhTvQKc3PJCUZHluk83ydvCyQh0wzUYDVSLkNkt03Ptu2tkj8VqTMsc8WPwBsnBwgNqK3FrD45HuFJYSObEO7ZqrHMZXOyys/jgjoAnIJ+CB5ef43PopTe+IQwqilf8JOjl7PWLPXDpnemiBkPKPy6MBGUr0F9mVEaD"
+    user: demery
+    tags:
+      - oak
+  - name: pgp-yubikey
+    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC6Ezt4eX71ZxvP7shtcniLJI6N0CWFrc3GSHtq3e/HF3LLWqnY5MWmhREuZrBLPhQX75n6uBWmSsbarwWeHzxO6UJCDkv9s/jMPFv3aV1d49qdF2LvEeKAy8lvN6jTINCEyE3g26tcDPavtciDszILdt+/mDrCWDU/+qKxb3I5X4MS+kj342fqPISJ1J4cfNMskyJib2LliWZnMXfAWgsIVM62Jx5WfJnsyXdjKdahUZeeN+2mr9OFr0ElKY1S3pbCds8BSibsarr9MIfWR4e/0DLWWfmpcPmuOX9lB+3g/bFFmcuyUoVhTMxW4tAG+xSOI89GVWBHx27z5MbGxmRfT2xSXb9DG9EA+p0bx4EUeyc6UIYmKk5R+rfVlagNocLqJDTEWDIum/Xq4qyL5mHXvk4gtVV8AKemqjsSGAtZnBEiAenA5vkVohHLWvq0WtkS9MvghOcG2VGAeuyr4muEGqm0BwrYxqXZBjugmhCcF5rFLSGv+h1s09JO0N5Q8eBmQTBrpif2b2ULnwm5xgVimce4VAgAN3QD0JTDqm2o43m7iS4YsoIXgVh/N5rpTWw0y/60eusxlyUC30mat1oSkYWvzXExIIvINpEGAyVieMvnCtSiSID9qQTFEja18G0Z6XN5eY6/u+ES6krZwWPbDs23auuvE+0nZth8Os9hkw=="
+    user: demery
+    tags:
+      - oak
+      - abusix
