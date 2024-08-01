@@ -1,0 +1,11 @@
+services:
+  keys:
+    image: ghcr.io/danielemery/keys:latest
+    ports:
+      - 8000:8000
+    volumes:
+      - './keys-config.yaml:/config.yaml'
+    restart: unless-stopped
+    environment:
+      - DOPPLER_ENVIRONMENT=local
+      - KEYS_VERSION=latest
