@@ -1,8 +1,8 @@
 import start from "./src/server.ts";
-import keys from "./src/public_keys.ts";
 import { filterIncludesKey, parseParameters } from "./src/filter.ts";
 import { parseEnvironmentVariables } from "./src/environment.ts";
 import { Sentry } from "./deps.ts";
+import loadConfig from "./src/load_config.ts";
 
 const environment = parseEnvironmentVariables(Deno.env.toObject());
 
@@ -14,6 +14,8 @@ if (environment.SENTRY_DSN) {
     release: environment.KEYS_VERSION,
   });
 }
+
+const { "ssh-keys": keys } = await loadConfig(environment.CONFIG_PATH);
 
 start(
   environment.PORT,
