@@ -1,6 +1,6 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
-import keys from "./public_keys.ts";
+import { PublicSSHKey } from "./load_config.ts";
 import pgp_key from "./pgp_key.ts";
 
 /**
@@ -10,7 +10,7 @@ import pgp_key from "./pgp_key.ts";
 export interface ServerDependencies {
   filterIncludesKey: typeof filterIncludesKey;
   parseParameters: typeof parseParameters;
-  keys: typeof keys;
+  keys: PublicSSHKey[];
 }
 
 /**

@@ -1,4 +1,4 @@
-import { PublicKey } from "./public_keys.ts";
+import { PublicSSHKey } from "./load_config.ts";
 
 /** Available filter options. */
 export interface Filter {
@@ -18,7 +18,7 @@ export interface Filter {
  * @param key The key to check against the filter.
  * @returns true if the filter includes the key, false if not.
  */
-export function filterIncludesKey(filter: Filter, key: PublicKey) {
+export function filterIncludesKey(filter: Filter, key: PublicSSHKey) {
   if (filter.user && key.user !== filter.user) {
     /** User filter provided and does not match key. */
     return false;
