@@ -38,7 +38,7 @@ cp .env.example .env
 Then run the following command to start the server:
 
 ```sh
-deno run --env --allow-net --allow-env --allow-read=./src main.ts
+deno run --env --allow-net --allow-env --allow-read main.ts
 ```
 
 ### Run tests
