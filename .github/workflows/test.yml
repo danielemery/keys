@@ -33,7 +33,7 @@ jobs:
           DOPPLER_ENVIRONMENT: gitlab_ci
           KEYS_VERSION: gitlab_ci
         run: |
-          deno test --coverage=coverage
+          deno test --allow-read --coverage=coverage
           deno coverage ./coverage --lcov --output=coverage.lcov
 
       - name: Upload coverage reports to Codecov
