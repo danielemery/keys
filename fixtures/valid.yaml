@@ -1,0 +1,12 @@
+ssh-keys:
+  - name: key-one
+    key: "ssh-rsa my-key-one"
+    user: joeblogs
+    tags:
+      - foo
+  - name: pgp-yubikey
+    key: "ssh-rsa my-key-two"
+    user: joeblogs
+    tags:
+      - foo
+      - bar
