@@ -28,8 +28,17 @@ curl "https://keys.demery.net/api?allOf=demery&allOf=thunderbird&noneOf=disabled
 
 ### Running locally
 
+Make a copy of the `.env.example` file and rename it to `.env`. Review it's
+contents and make any necessary changes.
+
 ```sh
-doppler run -- deno run --allow-net --allow-env --allow-read=./src main.ts
+cp .env.example .env
+```
+
+Then run the following command to start the server:
+
+```sh
+deno run --env --allow-net --allow-env --allow-read=./src main.ts
 ```
 
 ### Run tests
