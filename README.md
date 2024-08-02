@@ -132,7 +132,7 @@ deno run --env --allow-net --allow-env --allow-read main.ts
 ### Run tests
 
 ```sh
-deno test
+deno test --allow-read
 ```
 
 ### Local Helm Chart
