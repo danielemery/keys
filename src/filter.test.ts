@@ -6,7 +6,9 @@ Deno.test("parseParameters: must parse oneOf url param", () => {
   const expected: Filter = {
     oneOf: ["simple"],
   };
-  const actual = parseParameters(new URL("http://domain.com/api?oneOf=simple"));
+  const actual = parseParameters(
+    new URL("http://domain.com/keys?oneOf=simple"),
+  );
   assertEquals(actual, expected);
 });
 
@@ -14,7 +16,7 @@ Deno.test("parseParameters: must parse user url param", () => {
   const expected: Filter = {
     user: "sample",
   };
-  const actual = parseParameters(new URL("http://domain.com/api?user=sample"));
+  const actual = parseParameters(new URL("http://domain.com/keys?user=sample"));
   assertEquals(actual, expected);
 });
 
@@ -26,7 +28,7 @@ Deno.test("parseParameters: must parse complex filter params", () => {
   };
   const actual = parseParameters(
     new URL(
-      "http://domain.com/api?noneOf=not-me&noneOf=or-me&allOf=definitely-me&allOf=and-me&user=user-one",
+      "http://domain.com/keys?noneOf=not-me&noneOf=or-me&allOf=definitely-me&allOf=and-me&user=user-one",
     ),
   );
   assertEquals(actual, expected);
