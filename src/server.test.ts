@@ -91,7 +91,7 @@ Deno.test(
     const parseParametersSpy = spy(parseParameters);
     const filterIncludesKeySpy = spy(filterIncludesKey);
 
-    const url = `${TEST_URL}/api?oneOf=private&noneOf=public&noneOf=github`;
+    const url = `${TEST_URL}/keys?oneOf=private&noneOf=public&noneOf=github`;
 
     const response = await handleRequest(new Request(url), {
       parseParameters: parseParametersSpy,
@@ -124,7 +124,7 @@ Deno.test(
     const parseParametersStub = spy(throwingParseParameters);
     const filterIncludesKeyStub = spy(filterIncludesKey);
 
-    const url = `${TEST_URL}/api?oneOf=private&noneOf=public&noneOf=github`;
+    const url = `${TEST_URL}/keys?oneOf=private&noneOf=public&noneOf=github`;
 
     const response = await handleRequest(new Request(url), {
       parseParameters: parseParametersStub,
