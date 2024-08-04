@@ -3,7 +3,7 @@
 Simple repository to manage and distribute ssh keys.
 
 To see a production implementation of this app feel free to visit
-https://keys.demery.net/api
+https://keys.demery.net/keys
 
 Public keys are provided in a configuration file at application start. The
 application has no persistence layer and is stateless.
@@ -24,7 +24,7 @@ place to prevent loss of access.
 ### Get all listed keys
 
 ```sh
-curl "https://keys.demery.net/api"
+curl "https://keys.demery.net/keys"
 ```
 
 ### Update authorized keys file
@@ -36,7 +36,7 @@ tag and override the `authorized_keys` file with them_
 # Consider backup first
 cp ~/.ssh/authorized_keys ~/.ssh/authorized_keys.`date '+%Y-%m-%d__%H_%M_%S'`.backup
 # Override file with the matching keys
-curl "https://keys.demery.net/api?user=demery&allOf=oak&noneOf=disabled" > ~/.ssh/authorized_keys
+curl "https://keys.demery.net/keys?user=demery&allOf=oak&noneOf=disabled" > ~/.ssh/authorized_keys
 # Check that they keys were updated with what you expected
 cat ~/.ssh/authorized_keys
 ```
