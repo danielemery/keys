@@ -1,5 +1,6 @@
 import { parse } from "jsr:@std/yaml";
 import { z } from "../deps.ts";
+import { loadFileContents } from "./file.ts";
 
 export default async function loadConfig(path: string) {
   const contents = await loadFileContents(path);
@@ -12,24 +13,15 @@ export default async function loadConfig(path: string) {
   }
 }
 
-async function loadFileContents(path: string) {
-  try {
-    const file = await Deno.readFileSync(path);
-    const text = new TextDecoder().decode(file);
-    return text;
-  } catch (err) {
-    console.error(`Failed to read file at path: ${path}`);
-    throw err;
-  }
-}
-
 const configSchema = z.object({
-  "ssh-keys": z.array(z.object({
-    name: z.string(),
-    key: z.string(),
-    user: z.string(),
-    tags: z.array(z.string()).optional().default([]),
-  })),
+  "ssh-keys": z.array(
+    z.object({
+      name: z.string(),
+      key: z.string(),
+      user: z.string(),
+      tags: z.array(z.string()).optional().default([]),
+    }),
+  ),
 });
 
 export type Config = z.infer<typeof configSchema>;
