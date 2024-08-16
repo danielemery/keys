@@ -9,6 +9,7 @@ const baseVariables = {
   DOPPLER_ENVIRONMENT: "unit_tests",
   KEYS_VERSION: "unit_tests",
   CONFIG_PATH: "/test.yaml",
+  PGP_KEYS_PATH: "/test/pgp",
 };
 
 Deno.test(

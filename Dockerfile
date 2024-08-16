@@ -2,6 +2,10 @@ FROM denoland/deno:1.45.5
 
 WORKDIR /app
 
+# Create an empty /pgp directory so that is no pgp keys are created the container will not fail.
+RUN mkdir -p /pgp
+RUN chown deno:deno /pgp
+
 # Prefer not to run as root.
 USER deno
 

@@ -6,7 +6,13 @@ export default async function loadConfig(path: string) {
   const contents = await loadFileContents(path);
   try {
     const config = parse(contents);
-    return configSchema.parse(config);
+    const result = configSchema.parse(config);
+    console.log(
+      `Successfully loaded ${
+        result["ssh-keys"].length
+      } ssh public keys from ${path}.`,
+    );
+    return result;
   } catch (err) {
     console.error(`Failed to parse config file at path: ${path}`);
     throw err;
