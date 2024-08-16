@@ -1,7 +1,6 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
 import { PublicSSHKey } from "./load_config.ts";
-import pgp_key from "./pgp_key.ts";
 
 /**
  * The dependencies required by the server.
@@ -45,26 +44,6 @@ export function handleRequest(
 ) {
   try {
     const url = new URL(req.url);
-
-    /** If the url is /pgp return static public pgp key. */
-    if (url.pathname === "/pgp") {
-      return new Response(pgp_key, {
-        status: STATUS_CODE.OK,
-        statusText: STATUS_TEXT[STATUS_CODE.OK],
-      });
-    }
-
-    /** If the url is /pgp/daniel_emery.pub.asc return the keys with headers indicating download is preferred. */
-    if (url.pathname === "/pgp/daniel_emery.pub.asc") {
-      return new Response(pgp_key, {
-        status: STATUS_CODE.OK,
-        statusText: STATUS_TEXT[STATUS_CODE.OK],
-        headers: {
-          "Content-Disposition": "attachment; filename=daniel_emery.pub.asc",
-        },
-      });
-    }
-
     // For each supported keys endpoint serve the keys
     if (validKeysRoutes.includes(url.pathname)) {
       return serveKeys(url, version, dependencies);
