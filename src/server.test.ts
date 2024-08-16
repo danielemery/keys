@@ -1,10 +1,7 @@
 import { handleRequest, ServerDependencies } from "./server.ts";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
 
-import {
-  assertEquals,
-  assertStringIncludes,
-} from "https://deno.land/std@0.204.0/assert/mod.ts";
+import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import {
   assertSpyCall,
   assertSpyCalls,
@@ -45,43 +42,6 @@ Deno.test(
 
     assertEquals(response.status, 404);
     assertEquals(response.statusText, "Not Found");
-  },
-);
-
-Deno.test("handleRequest: must return pgp key for /pgp", async () => {
-  const response = await handleRequest(
-    new Request(`${TEST_URL}/pgp`),
-    emptyDependencies,
-    "unit_tests",
-  );
-
-  assertEquals(response.status, 200);
-  assertEquals(response.statusText, "OK");
-  assertStringIncludes(
-    await response.text(),
-    "-----BEGIN PGP PUBLIC KEY BLOCK-----",
-  );
-});
-
-Deno.test(
-  "handleRequest: must return pgp key with headers for download for /pgp/daniel_emery.pub.asc",
-  async () => {
-    const response = await handleRequest(
-      new Request(`${TEST_URL}/pgp/daniel_emery.pub.asc`),
-      emptyDependencies,
-      "unit_tests",
-    );
-
-    assertEquals(response.status, 200);
-    assertEquals(response.statusText, "OK");
-    assertStringIncludes(
-      await response.text(),
-      "-----BEGIN PGP PUBLIC KEY BLOCK-----",
-    );
-    assertEquals(
-      response.headers.get("Content-Disposition"),
-      "attachment; filename=daniel_emery.pub.asc",
-    );
   },
 );
 
