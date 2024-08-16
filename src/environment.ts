@@ -6,6 +6,7 @@ const environmentSchema = z.object({
   SENTRY_DSN: z.string().optional(),
   KEYS_VERSION: z.string(),
   CONFIG_PATH: z.string().optional().default("/config.yaml"),
+  PGP_KEYS_PATH: z.string().optional().default("/pgp"),
 });
 
 export function parseEnvironmentVariables(variableObject: unknown) {
