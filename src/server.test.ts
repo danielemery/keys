@@ -1,5 +1,6 @@
 import { handleRequest, ServerDependencies } from "./server.ts";
 import { filterIncludesKey, parseParameters } from "./filter.ts";
+import { servePGPKeyList } from "./serve_pgp.ts";
 
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import {
@@ -28,7 +29,11 @@ const fakeKeys = [
 const emptyDependencies: ServerDependencies = {
   filterIncludesKey: () => false,
   parseParameters: () => ({}),
-  keys: [],
+  getPGPTarget: () => undefined,
+  servePGPKey: () => new Response(""),
+  servePGPKeyList: () => new Response(""),
+  sshKeys: [],
+  pgpKeys: [],
 };
 
 Deno.test(
@@ -46,7 +51,7 @@ Deno.test(
 );
 
 Deno.test(
-  "handleRequest: must call appropriate functions and return keys",
+  "handleRequest: must call appropriate functions and return keys for ssh key routes",
   async () => {
     const parseParametersSpy = spy(parseParameters);
     const filterIncludesKeySpy = spy(filterIncludesKey);
@@ -54,9 +59,10 @@ Deno.test(
     const url = `${TEST_URL}/keys?oneOf=private&noneOf=public&noneOf=github`;
 
     const response = await handleRequest(new Request(url), {
+      ...emptyDependencies,
       parseParameters: parseParametersSpy,
       filterIncludesKey: filterIncludesKeySpy,
-      keys: fakeKeys,
+      sshKeys: fakeKeys,
     }, "unit_tests");
 
     assertSpyCalls(parseParametersSpy, 1);
@@ -75,6 +81,73 @@ Deno.test(
   },
 );
 
+Deno.test("handleRequest: must call appropriate functions and return keys for pgp key list routes", async () => {
+  const servePGPKeyListSpy = spy(servePGPKeyList);
+
+  const url = `${TEST_URL}/pgp`;
+
+  const dependencies = {
+    ...emptyDependencies,
+    servePGPKeyList: servePGPKeyListSpy,
+    pgpKeys: fakeKeys,
+  };
+
+  const response = await handleRequest(
+    new Request(url),
+    dependencies,
+    "unit_tests",
+  );
+
+  assertSpyCalls(servePGPKeyListSpy, 1);
+  assertSpyCall(servePGPKeyListSpy, 0, {
+    args: ["unit_tests", dependencies],
+  });
+
+  assertEquals(response.status, 200);
+  assertEquals(response.statusText, "OK");
+  assertEquals(
+    await response.text(),
+    `key-1
+key-2`,
+  );
+});
+
+Deno.test("handleRequest: must call appropriate functions and return keys for pgp key routes", async () => {
+  const getPGPTargetSpy = spy(() => ({
+    name: "key-1",
+    extension: "asc" as const,
+  }));
+  const servePGPKeySpy = spy(() => new Response("fake"));
+
+  const url = `${TEST_URL}/pgp/key-1.asc`;
+
+  const dependencies = {
+    ...emptyDependencies,
+    getPGPTarget: getPGPTargetSpy,
+    servePGPKey: servePGPKeySpy,
+    pgpKeys: fakeKeys,
+  };
+
+  const response = await handleRequest(
+    new Request(url),
+    dependencies,
+    "unit_tests",
+  );
+
+  assertSpyCalls(getPGPTargetSpy, 1);
+  assertSpyCall(getPGPTargetSpy, 0, {
+    args: ["/pgp/key-1.asc"],
+  });
+
+  assertSpyCalls(servePGPKeySpy, 1);
+  assertSpyCall(servePGPKeySpy, 0, {
+    args: [{ name: "key-1", extension: "asc" }, "unit_tests", dependencies],
+  });
+
+  assertEquals(response.status, 200);
+  assertEquals(await response.text(), "fake");
+});
+
 Deno.test(
   "handleRequest: must return 500 if unexpected error is thrown",
   async () => {
@@ -87,9 +160,10 @@ Deno.test(
     const url = `${TEST_URL}/keys?oneOf=private&noneOf=public&noneOf=github`;
 
     const response = await handleRequest(new Request(url), {
+      ...emptyDependencies,
       parseParameters: parseParametersStub,
       filterIncludesKey: filterIncludesKeyStub,
-      keys: fakeKeys,
+      sshKeys: fakeKeys,
     }, "unit_tests");
 
     assertSpyCalls(parseParametersStub, 1);
