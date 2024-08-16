@@ -1,0 +1,9 @@
+ssh-keys: []
+pgp-keys:
+  - name: key-one
+    key: | 
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+
+      fake1
+      -----END PGP PUBLIC KEY BLOCK-----
+  - name: key-two

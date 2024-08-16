@@ -25,7 +25,7 @@ Deno.test("loadConfig: must throw syntax error if file is not valid yaml", async
   );
 });
 
-Deno.test("loadConfig: must throw zod error if file is not valid config", async () => {
+Deno.test("loadConfig: must throw zod error if ssh keys are not valid", async () => {
   await assertRejects(
     async () => {
       await loadConfig("./fixtures/missing-key.yaml");
@@ -53,7 +53,27 @@ Deno.test("loadConfig: must throw zod error if file is not valid config", async 
   );
 });
 
-Deno.test("loadConfig: must load valid config", async () => {
+Deno.test("loadConfig: must throw zod error if pgp keys are not valid", async () => {
+  await assertRejects(
+    async () => {
+      await loadConfig("./fixtures/missing-pgp-key.yaml");
+    },
+    ZodError,
+    `{
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "pgp-keys",
+      1,
+      "key"
+    ],
+    "message": "Required"
+  }`,
+  );
+});
+
+Deno.test("loadConfig: must load valid config with ssh keys", async () => {
   const config = await loadConfig("./fixtures/valid.yaml");
   assertEquals(config, {
     "ssh-keys": [
@@ -73,6 +93,32 @@ Deno.test("loadConfig: must load valid config", async () => {
           "bar",
         ],
         user: "joeblogs",
+      },
+    ],
+    "pgp-keys": [],
+  });
+});
+
+Deno.test("loadConfig: must load valid config with pgp keys", async () => {
+  const config = await loadConfig("./fixtures/valid-pgp.yaml");
+  assertEquals(config, {
+    "ssh-keys": [],
+    "pgp-keys": [
+      {
+        name: "key-one",
+        key: `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+fake1
+-----END PGP PUBLIC KEY BLOCK-----
+`,
+      },
+      {
+        name: "key-two",
+        key: `-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+fake2
+-----END PGP PUBLIC KEY BLOCK-----
+`,
       },
     ],
   });
