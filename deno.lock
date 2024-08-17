@@ -2,7 +2,7 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "jsr:@std/async@^1.0.0-rc.1": "jsr:@std/async@1.0.0",
+      "jsr:@std/async@^1.0.0-rc.1": "jsr:@std/async@1.0.1",
       "jsr:@std/cli@^0.224.7": "jsr:@std/cli@0.224.7",
       "jsr:@std/encoding@1.0.0-rc.2": "jsr:@std/encoding@1.0.0-rc.2",
       "jsr:@std/fmt@^0.225.4": "jsr:@std/fmt@0.225.6",
@@ -13,8 +13,8 @@
       "jsr:@std/streams@^0.224.5": "jsr:@std/streams@0.224.5"
     },
     "jsr": {
-      "@std/async@1.0.0": {
-        "integrity": "19891d4540cd3af5efd1d7b1f0e92f6ca365e51edc263fbc077334173878e528"
+      "@std/async@1.0.1": {
+        "integrity": "3c7f6324a8a1b47ca657e5a349b511c9a6c2c0729e9d66b223c9ecaac0753ecb"
       },
       "@std/cli@0.224.7": {
         "integrity": "654ca6477518e5e3a0d3fabafb2789e92b8c0febf1a1d24ba4b567aba94b5977"
@@ -89,8 +89,7 @@
     "https://deno.land/std@0.204.0/assert/unreachable.ts": "4600dc0baf7d9c15a7f7d234f00c23bca8f3eba8b140286aaca7aa998cf9a536",
     "https://deno.land/std@0.204.0/fmt/colors.ts": "c51c4642678eb690dcf5ffee5918b675bf01a33fba82acf303701ae1a4f8c8d9",
     "https://deno.land/std@0.204.0/testing/mock.ts": "6576b4aa55ee20b1990d656a78fff83599e190948c00e9f25a7f3ac5e9d6492d",
-    "https://deno.land/x/sentry@7.116.0/index.mjs": "ac592e72d146070d91f13ae255efc569321689ac1ebae6bc459f0214ff480ab0",
-    "https://deno.land/x/sentry@8.19.0/index.mjs": "44b093c9bbbd134ccbed499afa3935fe4cf965510f126da8ad3bd5cc1ea5bd33",
+    "https://deno.land/x/sentry@8.26.0/index.mjs": "851bfa3bc942334c8a56a668454385ba4dd422b9d6d64453718136ce83b4acb3",
     "https://deno.land/x/zod@v3.23.8/ZodError.ts": "528da200fbe995157b9ae91498b103c4ef482217a5c086249507ac850bd78f52",
     "https://deno.land/x/zod@v3.23.8/errors.ts": "5285922d2be9700cc0c70c95e4858952b07ae193aa0224be3cbd5cd5567eabef",
     "https://deno.land/x/zod@v3.23.8/external.ts": "a6cfbd61e9e097d5f42f8a7ed6f92f93f51ff927d29c9fbaec04f03cbce130fe",
