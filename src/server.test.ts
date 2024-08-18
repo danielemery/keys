@@ -69,14 +69,14 @@ Deno.test(
     };
 
     const response = await handleRequest(
-      new Request(url),
+      new Request(url, { headers: acceptPlainHeaders }),
       dependencies,
       "unit_tests",
     );
 
     assertSpyCalls(serveKeysSpy, 1);
     assertSpyCall(serveKeysSpy, 0, {
-      args: [new URL(url), "unit_tests", dependencies],
+      args: [new URL(url), "unit_tests", dependencies, "text/plain"],
     });
 
     assertEquals(response.status, 200);
@@ -173,14 +173,14 @@ Deno.test(
     };
 
     const response = await handleRequest(
-      new Request(url),
+      new Request(url, { headers: acceptPlainHeaders }),
       dependencies,
       "unit_tests",
     );
 
     assertSpyCalls(serveKeysStub, 1);
     assertSpyCall(serveKeysStub, 0, {
-      args: [new URL(url), "unit_tests", dependencies],
+      args: [new URL(url), "unit_tests", dependencies, "text/plain"],
     });
 
     assertEquals(response.status, 500);
