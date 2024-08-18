@@ -75,7 +75,7 @@ export function handleRequest(
 
     // For each supported keys endpoint serve the keys
     if (validSSHKeyRoutes.includes(url.pathname)) {
-      return serveKeys(url, version, dependencies);
+      return serveKeys(url, version, dependencies, contentType);
     }
 
     // If the url is not recognized, return a 404.
