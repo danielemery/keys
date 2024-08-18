@@ -26,6 +26,10 @@ const fakeKeys = [
   },
 ];
 
+const acceptPlainHeaders = new Headers({
+  "Accept": "text/plain",
+});
+
 const emptyDependencies: ServerDependencies = {
   filterIncludesKey: () => false,
   parseParameters: () => ({}),
@@ -93,14 +97,14 @@ Deno.test("handleRequest: must call appropriate functions and return keys for pg
   };
 
   const response = await handleRequest(
-    new Request(url),
+    new Request(url, { headers: acceptPlainHeaders }),
     dependencies,
     "unit_tests",
   );
 
   assertSpyCalls(servePGPKeyListSpy, 1);
   assertSpyCall(servePGPKeyListSpy, 0, {
-    args: ["unit_tests", dependencies],
+    args: ["unit_tests", dependencies, "text/plain"],
   });
 
   assertEquals(response.status, 200);
@@ -129,7 +133,7 @@ Deno.test("handleRequest: must call appropriate functions and return keys for pg
   };
 
   const response = await handleRequest(
-    new Request(url),
+    new Request(url, { headers: acceptPlainHeaders }),
     dependencies,
     "unit_tests",
   );
@@ -141,7 +145,12 @@ Deno.test("handleRequest: must call appropriate functions and return keys for pg
 
   assertSpyCalls(servePGPKeySpy, 1);
   assertSpyCall(servePGPKeySpy, 0, {
-    args: [{ name: "key-1", extension: "asc" }, "unit_tests", dependencies],
+    args: [
+      { name: "key-1", extension: "asc" },
+      "unit_tests",
+      dependencies,
+      "text/plain",
+    ],
   });
 
   assertEquals(response.status, 200);
