@@ -1,5 +1,6 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
 import { ServerDependencies } from "./server.ts";
+import { ContentType } from "./content-types.ts";
 
 export const validPGPExtensions = ["asc", "pub", "pgp"] as const;
 export type ValidPGPExtension = typeof validPGPExtensions[number];
@@ -10,16 +11,27 @@ export const validPGPExtensionsString = `${
 export function servePGPKeyList(
   version: string,
   dependencies: ServerDependencies,
+  contentType: ContentType,
 ) {
-  const resultString = dependencies.pgpKeys.map((key) => key.name).join("\n");
-
-  return new Response(resultString, {
-    status: STATUS_CODE.OK,
-    statusText: STATUS_TEXT[STATUS_CODE.OK],
-    headers: {
-      "X-Keys-Version": version,
-    },
-  });
+  switch (contentType) {
+    case "text/plain": {
+      const resultString = dependencies.pgpKeys.map((key) => key.name).join(
+        "\n",
+      );
+      return new Response(resultString, {
+        status: STATUS_CODE.OK,
+        statusText: STATUS_TEXT[STATUS_CODE.OK],
+        headers: {
+          "X-Keys-Version": version,
+        },
+      });
+    }
+    default:
+      return new Response(undefined, {
+        status: STATUS_CODE.NotAcceptable,
+        statusText: STATUS_TEXT[STATUS_CODE.NotAcceptable],
+      });
+  }
 }
 
 interface PGPKeyTarget {
@@ -56,6 +68,7 @@ export function servePGPKey(
   target: PGPKeyTarget,
   version: string,
   dependencies: ServerDependencies,
+  contentType: ContentType,
 ) {
   const key = dependencies.pgpKeys.find((key) => key.name === target.name);
   if (!key) {
@@ -66,17 +79,25 @@ export function servePGPKey(
     });
   }
 
-  return new Response(key.key, {
-    status: STATUS_CODE.OK,
-    statusText: STATUS_TEXT[STATUS_CODE.OK],
-    headers: {
-      "X-Keys-Version": version,
-      ...(target.extension
-        ? {
-          "Content-Disposition":
-            `attachment; filename="${key.name}.${target.extension}"`,
-        }
-        : {}),
-    },
-  });
+  switch (contentType) {
+    case "text/plain":
+      return new Response(key.key, {
+        status: STATUS_CODE.OK,
+        statusText: STATUS_TEXT[STATUS_CODE.OK],
+        headers: {
+          "X-Keys-Version": version,
+          ...(target.extension
+            ? {
+              "Content-Disposition":
+                `attachment; filename="${key.name}.${target.extension}"`,
+            }
+            : {}),
+        },
+      });
+    default:
+      return new Response(undefined, {
+        status: STATUS_CODE.NotAcceptable,
+        statusText: STATUS_TEXT[STATUS_CODE.NotAcceptable],
+      });
+  }
 }
