@@ -18,24 +18,34 @@ const emptyDependencies: ServerDependencies = {
   pgpKeys: [],
 };
 
-Deno.test("servePGPKeyList: must return the list of key names", async () => {
+Deno.test("servePGPKeyList (plain): must return the list of key names", async () => {
   const pgpKeys = [
     { name: "key1", key: "key1" },
     { name: "key2", key: "key2" },
   ];
-  const response = servePGPKeyList("1", { ...emptyDependencies, pgpKeys });
+  const response = servePGPKeyList(
+    "1",
+    { ...emptyDependencies, pgpKeys },
+    "text/plain",
+  );
   assertEquals(response.status, 200);
   assertEquals(response.statusText, "OK");
   assertEquals(response.headers.get("X-Keys-Version"), "1");
   assertEquals(await response.text(), "key1\nkey2");
 });
 
-Deno.test("servePGPKeyList: must return an empty list if no keys are loaded", async () => {
-  const response = servePGPKeyList("1", emptyDependencies);
+Deno.test("servePGPKeyList (plain): must return an empty list if no keys are loaded", async () => {
+  const response = servePGPKeyList("1", emptyDependencies, "text/plain");
   assertEquals(response.status, 200);
   assertEquals(response.statusText, "OK");
   assertEquals(response.headers.get("X-Keys-Version"), "1");
   assertEquals(await response.text(), "");
+});
+
+Deno.test("servePGPKeyList: must return 406 for unsupported content types", () => {
+  const response = servePGPKeyList("1", emptyDependencies, "application/json");
+  assertEquals(response.status, 406);
+  assertEquals(response.statusText, "Not Acceptable");
 });
 
 Deno.test("isValidPGPExtension: must return true for valid extensions", () => {
@@ -87,16 +97,18 @@ Deno.test("servePGPKey: must return 404 for unknown keys", async () => {
     { name: "unknown" },
     "1",
     { ...emptyDependencies, pgpKeys: [{ name: "non-matching", key: "key" }] },
+    "text/plain",
   );
   assertEquals(response.status, 404);
   assertEquals(response.statusText, "Not Found");
 });
 
-Deno.test("servePGPKey: must return the key for known keys", async () => {
+Deno.test("servePGPKey (plain): must return the key for known keys", async () => {
   const response = await servePGPKey(
     { name: "key" },
     "1",
     { ...emptyDependencies, pgpKeys: [{ name: "key", key: "key" }] },
+    "text/plain",
   );
   assertEquals(response.status, 200);
   assertEquals(response.statusText, "OK");
@@ -105,11 +117,12 @@ Deno.test("servePGPKey: must return the key for known keys", async () => {
   assertEquals(response.headers.get("Content-Disposition"), null);
 });
 
-Deno.test("servePGPKey: must return the key with content disposition if an extension is provided", async () => {
+Deno.test("servePGPKey (plain): must return the key with content disposition if an extension is provided", async () => {
   const response = await servePGPKey(
     { name: "key", extension: "asc" },
     "1",
     { ...emptyDependencies, pgpKeys: [{ name: "key", key: "key" }] },
+    "text/plain",
   );
   assertEquals(response.status, 200);
   assertEquals(response.statusText, "OK");
@@ -119,4 +132,15 @@ Deno.test("servePGPKey: must return the key with content disposition if an exten
     response.headers.get("Content-Disposition"),
     'attachment; filename="key.asc"',
   );
+});
+
+Deno.test("servePGPKey: must return 406 for unsupported content types", async () => {
+  const response = await servePGPKey(
+    { name: "key" },
+    "1",
+    { ...emptyDependencies, pgpKeys: [{ name: "key", key: "key" }] },
+    "application/json",
+  );
+  assertEquals(response.status, 406);
+  assertEquals(response.statusText, "Not Acceptable");
 });

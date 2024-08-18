@@ -3,6 +3,7 @@ import { filterIncludesKey, parseParameters } from "./filter.ts";
 import { PublicSSHKey } from "./load_config.ts";
 import { PGPKey } from "./load_config.ts";
 import { getPGPTarget, servePGPKey, servePGPKeyList } from "./serve_pgp.ts";
+import { getContentType } from "./content-types.ts";
 
 /**
  * The dependencies required by the server.
@@ -48,13 +49,16 @@ export function handleRequest(
   dependencies: ServerDependencies,
   version: string,
 ) {
+  // Extract content type
+  const contentType = getContentType(req.headers);
+
   const { servePGPKeyList, getPGPTarget, servePGPKey } = dependencies;
   try {
     const url = new URL(req.url);
 
     /** If the url is /pgp return the list of loaded pgp keys. */
     if (validPGPKeyRoutes.includes(url.pathname)) {
-      return servePGPKeyList(version, dependencies);
+      return servePGPKeyList(version, dependencies, contentType);
     }
 
     /**
@@ -63,7 +67,7 @@ export function handleRequest(
      */
     const pgpKeyTarget = getPGPTarget(url.pathname);
     if (pgpKeyTarget) {
-      return servePGPKey(pgpKeyTarget, version, dependencies);
+      return servePGPKey(pgpKeyTarget, version, dependencies, contentType);
     }
 
     // For each supported keys endpoint serve the keys
