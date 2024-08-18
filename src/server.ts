@@ -4,6 +4,7 @@ import { PublicSSHKey } from "./load_config.ts";
 import { PGPKey } from "./load_pgp.ts";
 import { getPGPTarget, servePGPKey, servePGPKeyList } from "./serve_pgp.ts";
 import { getContentType } from "./content-types.ts";
+import { serveKeys } from "./serve-keys.ts";
 
 /**
  * The dependencies required by the server.
@@ -12,6 +13,7 @@ import { getContentType } from "./content-types.ts";
 export interface ServerDependencies {
   filterIncludesKey: typeof filterIncludesKey;
   parseParameters: typeof parseParameters;
+  serveKeys: typeof serveKeys;
   getPGPTarget: typeof getPGPTarget;
   servePGPKey: typeof servePGPKey;
   servePGPKeyList: typeof servePGPKeyList;
@@ -52,7 +54,8 @@ export function handleRequest(
   // Extract content type
   const contentType = getContentType(req.headers);
 
-  const { servePGPKeyList, getPGPTarget, servePGPKey } = dependencies;
+  const { serveKeys, servePGPKeyList, getPGPTarget, servePGPKey } =
+    dependencies;
   try {
     const url = new URL(req.url);
 
@@ -87,30 +90,4 @@ export function handleRequest(
       statusText: STATUS_TEXT[STATUS_CODE.InternalServerError],
     });
   }
-}
-
-function serveKeys(
-  url: URL,
-  version: string,
-  dependencies: ServerDependencies,
-) {
-  const { filterIncludesKey, parseParameters, sshKeys } = dependencies;
-
-  /** Parse query params into filters object and filter all public keys. */
-  const filter = parseParameters(url);
-  const filteredKeys = sshKeys.filter((key) => filterIncludesKey(filter, key));
-
-  /** Format the public keys in a suitable way for an authorized_keys file. */
-  const responseData = filteredKeys
-    .map((key) => `${key.key} ${key.user}@${key.name}`)
-    .join("\n");
-
-  /** Everything worked! We're good to return the keys and OK. */
-  return new Response(responseData, {
-    status: STATUS_CODE.OK,
-    statusText: STATUS_TEXT[STATUS_CODE.OK],
-    headers: {
-      "X-Keys-Version": version,
-    },
-  });
 }
