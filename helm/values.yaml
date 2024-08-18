@@ -1,6 +1,11 @@
+# registry to pull the image from, can usually be left as-is unless you're running a fork
 registry: ghcr.io/danielemery/keys
+# image version - this is used to pull the image AND to report the version in headers
 version: REPLACED_BY_CI
+# k8s secrets name to use for any application secrets
 secretName: keys-secret
 configFile:
+  # config file to mount into the container
   name: config.yaml
+  # path to mount the config file to
   mountPath: /config.yaml
