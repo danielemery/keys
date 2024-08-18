@@ -43,6 +43,26 @@ cat ~/.ssh/authorized_keys
 
 ## Running / Installation
 
+### Configuration File
+
+Regardless of the method of deployment, the `keys` application requires a config
+yaml file containing the list of keys to be served. An example file can be found
+in `./examples/keys-config.yaml`.
+
+The config file contains two main sections:
+
+- `ssh-keys`: A list of public ssh keys with the following fields:
+  - name: The name of the key (this will be used as the `@host` in the
+    `authorized_keys` file)
+  - key: The public key itself
+  - user: The user that the key should be associated with (this will be used as
+    the `user@host` in the `authorized_keys` file)
+  - tags: Optionally a list of tags that can be used to filter the keys
+- `pgp-keys`: A list of public pgp keys with the following fields:
+  - name: The name of the key (this will be used in the route and as the
+    filename if you download the key)
+  - key: The public key itself
+
 ### Helm
 
 #### Secret Creation
