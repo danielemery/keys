@@ -1,6 +1,6 @@
 import { handleRequest, ServerDependencies } from "./server.ts";
-import { filterIncludesKey, parseParameters } from "./filter.ts";
 import { servePGPKeyList } from "./serve_pgp.ts";
+import { serveKeys } from "./serve-keys.ts";
 
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import {
@@ -33,6 +33,7 @@ const acceptPlainHeaders = new Headers({
 const emptyDependencies: ServerDependencies = {
   filterIncludesKey: () => false,
   parseParameters: () => ({}),
+  serveKeys: () => new Response(""),
   getPGPTarget: () => undefined,
   servePGPKey: () => new Response(""),
   servePGPKeyList: () => new Response(""),
@@ -57,31 +58,29 @@ Deno.test(
 Deno.test(
   "handleRequest: must call appropriate functions and return keys for ssh key routes",
   async () => {
-    const parseParametersSpy = spy(parseParameters);
-    const filterIncludesKeySpy = spy(filterIncludesKey);
+    const serveKeysSpy = spy(() => new Response("fake response"));
 
     const url = `${TEST_URL}/keys?oneOf=private&noneOf=public&noneOf=github`;
 
-    const response = await handleRequest(new Request(url), {
+    const dependencies: ServerDependencies = {
       ...emptyDependencies,
-      parseParameters: parseParametersSpy,
-      filterIncludesKey: filterIncludesKeySpy,
+      serveKeys: serveKeysSpy,
       sshKeys: fakeKeys,
-    }, "unit_tests");
+    };
 
-    assertSpyCalls(parseParametersSpy, 1);
-    assertSpyCall(parseParametersSpy, 0, {
-      args: [new URL(url)],
-    });
+    const response = await handleRequest(
+      new Request(url),
+      dependencies,
+      "unit_tests",
+    );
 
-    assertSpyCalls(filterIncludesKeySpy, 2);
-    assertSpyCall(filterIncludesKeySpy, 0, {
-      args: [{ oneOf: ["private"], noneOf: ["public", "github"] }, fakeKeys[0]],
+    assertSpyCalls(serveKeysSpy, 1);
+    assertSpyCall(serveKeysSpy, 0, {
+      args: [new URL(url), "unit_tests", dependencies],
     });
 
     assertEquals(response.status, 200);
-    assertEquals(response.statusText, "OK");
-    assertEquals(await response.text(), "ssh-rsa fake1 user@key-1");
+    assertEquals(await response.text(), "fake response");
   },
 );
 
@@ -160,27 +159,29 @@ Deno.test("handleRequest: must call appropriate functions and return keys for pg
 Deno.test(
   "handleRequest: must return 500 if unexpected error is thrown",
   async () => {
-    const throwingParseParameters: typeof parseParameters = () => {
+    const throwingServeKeys: typeof serveKeys = () => {
       throw new Error("Unexpected error");
     };
-    const parseParametersStub = spy(throwingParseParameters);
-    const filterIncludesKeyStub = spy(filterIncludesKey);
+    const serveKeysStub = spy(throwingServeKeys);
 
     const url = `${TEST_URL}/keys?oneOf=private&noneOf=public&noneOf=github`;
 
-    const response = await handleRequest(new Request(url), {
+    const dependencies = {
       ...emptyDependencies,
-      parseParameters: parseParametersStub,
-      filterIncludesKey: filterIncludesKeyStub,
+      serveKeys: serveKeysStub,
       sshKeys: fakeKeys,
-    }, "unit_tests");
+    };
 
-    assertSpyCalls(parseParametersStub, 1);
-    assertSpyCall(parseParametersStub, 0, {
-      args: [new URL(url)],
+    const response = await handleRequest(
+      new Request(url),
+      dependencies,
+      "unit_tests",
+    );
+
+    assertSpyCalls(serveKeysStub, 1);
+    assertSpyCall(serveKeysStub, 0, {
+      args: [new URL(url), "unit_tests", dependencies],
     });
-
-    assertSpyCalls(filterIncludesKeyStub, 0);
 
     assertEquals(response.status, 500);
     assertEquals(response.statusText, "Internal Server Error");
