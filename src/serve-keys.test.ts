@@ -54,7 +54,7 @@ Deno.test(
       parseParameters: parseParametersSpy,
       filterIncludesKey: filterIncludesKeySpy,
       sshKeys: fakeKeys,
-    });
+    }, "text/plain");
 
     assertSpyCalls(parseParametersSpy, 1);
     assertSpyCall(parseParametersSpy, 0, {
@@ -74,3 +74,14 @@ Deno.test(
     assertEquals(await response.text(), "ssh-rsa fake1 user@key-1");
   },
 );
+
+Deno.test("serveKeys: must return NotAcceptable for unsupported content type", async () => {
+  const response = await serveKeys(
+    new URL(TEST_URL),
+    "unit-tests",
+    emptyDependencies,
+    "text/html",
+  );
+  assertEquals(response.status, 406);
+  assertEquals(response.statusText, "Not Acceptable");
+});
