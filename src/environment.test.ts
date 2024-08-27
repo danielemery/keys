@@ -9,6 +9,7 @@ const baseVariables = {
   DOPPLER_ENVIRONMENT: "unit_tests",
   KEYS_VERSION: "unit_tests",
   CONFIG_PATH: "/test.yaml",
+  INSTANCE_NAME: "Test",
 };
 
 Deno.test(
@@ -26,14 +27,18 @@ Deno.test(
   },
 );
 Deno.test(
-  "parseEnvironmentVariables: must use defaults if variables are not supplied",
+  "parseEnvironmentVariables: must use defaults if optional variables are not supplied",
   () => {
     const variables = {
-      ...baseVariables,
+      DOPPLER_ENVIRONMENT: "unit_tests",
+      KEYS_VERSION: "unit_tests",
     };
 
     assertEquals(parseEnvironmentVariables(variables), {
-      ...baseVariables,
+      CONFIG_PATH: "/config.yaml",
+      DOPPLER_ENVIRONMENT: "unit_tests",
+      INSTANCE_NAME: "Unnamed",
+      KEYS_VERSION: "unit_tests",
       PORT: 8000,
     });
   },

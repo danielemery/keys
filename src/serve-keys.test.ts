@@ -19,6 +19,7 @@ const emptyDependencies: ServerDependencies = {
   servePGPKeyList: () => new Response(""),
   sshKeys: [],
   pgpKeys: [],
+  instanceName: "unit-tests",
 };
 
 const fakeKeys: PublicSSHKey[] = [

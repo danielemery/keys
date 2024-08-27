@@ -30,6 +30,8 @@ spec:
           env:
             - name: KEYS_VERSION
               value: {{ .Values.version | quote }}
+            - name: INSTANCE_NAME
+              value: {{ .Values.name | quote }}
           envFrom:
             - secretRef:
                 name: {{ .Values.secretName }}

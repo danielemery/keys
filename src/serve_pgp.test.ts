@@ -17,6 +17,7 @@ const emptyDependencies: ServerDependencies = {
   servePGPKeyList: () => new Response(""),
   sshKeys: [],
   pgpKeys: [],
+  instanceName: "unit-tests",
 };
 
 Deno.test("servePGPKeyList (plain): must return the list of key names", async () => {

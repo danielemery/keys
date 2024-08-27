@@ -6,6 +6,7 @@ const environmentSchema = z.object({
   SENTRY_DSN: z.string().optional(),
   KEYS_VERSION: z.string(),
   CONFIG_PATH: z.string().optional().default("/config.yaml"),
+  INSTANCE_NAME: z.string().optional().default("Unnamed"),
 });
 
 export function parseEnvironmentVariables(variableObject: unknown) {

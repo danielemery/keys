@@ -39,6 +39,7 @@ const emptyDependencies: ServerDependencies = {
   servePGPKeyList: () => new Response(""),
   sshKeys: [],
   pgpKeys: [],
+  instanceName: "unit-tests",
 };
 
 Deno.test(

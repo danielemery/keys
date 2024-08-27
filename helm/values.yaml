@@ -9,3 +9,5 @@ configFile:
   name: config.yaml
   # path to mount the config file to
   mountPath: /config.yaml
+# Name for the instance
+name: Unnamed

@@ -11,6 +11,7 @@ import { serveKeys } from "./serve-keys.ts";
  * We use this to make it easier to mock the dependencies in tests.
  */
 export interface ServerDependencies {
+  instanceName: string;
   filterIncludesKey: typeof filterIncludesKey;
   parseParameters: typeof parseParameters;
   serveKeys: typeof serveKeys;

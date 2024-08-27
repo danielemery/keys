@@ -32,6 +32,7 @@ start(
     servePGPKeyList,
     sshKeys,
     pgpKeys,
+    instanceName: environment.INSTANCE_NAME,
   },
   environment.KEYS_VERSION,
 );
