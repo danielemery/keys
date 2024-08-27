@@ -33,6 +33,7 @@ const acceptPlainHeaders = new Headers({
 const emptyDependencies: ServerDependencies = {
   filterIncludesKey: () => false,
   parseParameters: () => ({}),
+  serveHome: () => new Response(""),
   serveKeys: () => new Response(""),
   getPGPTarget: () => undefined,
   servePGPKey: () => new Response(""),
@@ -55,6 +56,31 @@ Deno.test(
     assertEquals(response.statusText, "Not Found");
   },
 );
+
+Deno.test('handleRequest: must call appropriate functions and return keys for "/" (home) route', async () => {
+  const serveHomeSpy = spy(() => new Response("fake response"));
+
+  const url = `${TEST_URL}/`;
+
+  const dependencies: ServerDependencies = {
+    ...emptyDependencies,
+    serveHome: serveHomeSpy,
+  };
+
+  const response = await handleRequest(
+    new Request(url, { headers: acceptPlainHeaders }),
+    dependencies,
+    "unit_tests",
+  );
+
+  assertSpyCalls(serveHomeSpy, 1);
+  assertSpyCall(serveHomeSpy, 0, {
+    args: ["unit_tests", dependencies, "text/plain"],
+  });
+
+  assertEquals(response.status, 200);
+  assertEquals(await response.text(), "fake response");
+});
 
 Deno.test(
   "handleRequest: must call appropriate functions and return keys for ssh key routes",

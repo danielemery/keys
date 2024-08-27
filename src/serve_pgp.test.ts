@@ -11,6 +11,7 @@ import { ServerDependencies } from "./server.ts";
 const emptyDependencies: ServerDependencies = {
   filterIncludesKey: () => false,
   parseParameters: () => ({}),
+  serveHome: () => new Response(""),
   serveKeys: () => new Response(""),
   getPGPTarget: () => undefined,
   servePGPKey: () => new Response(""),

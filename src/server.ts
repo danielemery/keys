@@ -5,6 +5,7 @@ import { PGPKey } from "./load_config.ts";
 import { getPGPTarget, servePGPKey, servePGPKeyList } from "./serve_pgp.ts";
 import { getContentType } from "./content-types.ts";
 import { serveKeys } from "./serve-keys.ts";
+import { serveHome } from "./serve-home.ts";
 
 /**
  * The dependencies required by the server.
@@ -14,6 +15,7 @@ export interface ServerDependencies {
   instanceName: string;
   filterIncludesKey: typeof filterIncludesKey;
   parseParameters: typeof parseParameters;
+  serveHome: typeof serveHome;
   serveKeys: typeof serveKeys;
   getPGPTarget: typeof getPGPTarget;
   servePGPKey: typeof servePGPKey;
@@ -46,6 +48,7 @@ const validSSHKeyRoutes = [
   "/authorized_keys/",
 ];
 const validPGPKeyRoutes = ["/pgp", "/pgp/"];
+const validHomeRoutes = ["/"];
 
 export function handleRequest(
   req: Request,
@@ -55,7 +58,7 @@ export function handleRequest(
   // Extract content type
   const contentType = getContentType(req.headers);
 
-  const { serveKeys, servePGPKeyList, getPGPTarget, servePGPKey } =
+  const { serveHome, serveKeys, servePGPKeyList, getPGPTarget, servePGPKey } =
     dependencies;
   try {
     const url = new URL(req.url);
@@ -77,6 +80,11 @@ export function handleRequest(
     // For each supported keys endpoint serve the keys
     if (validSSHKeyRoutes.includes(url.pathname)) {
       return serveKeys(url, version, dependencies, contentType);
+    }
+
+    // For each supported home endpoint serve the home page
+    if (validHomeRoutes.includes(url.pathname)) {
+      return serveHome(version, dependencies, contentType);
     }
 
     // If the url is not recognized, return a 404.
