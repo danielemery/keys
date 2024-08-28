@@ -4,24 +4,11 @@ import {
   assertSpyCalls,
   spy,
 } from "https://deno.land/std@0.204.0/testing/mock.ts";
-import { ServerDependencies } from "./server.ts";
 import { serveKeys } from "./serve-keys.ts";
 import { PublicSSHKey } from "./load_config.ts";
+import { emptyDependencies } from "./test_helpers.ts";
 
 const TEST_URL = "http://localhost";
-
-const emptyDependencies: ServerDependencies = {
-  filterIncludesKey: () => false,
-  parseParameters: () => ({}),
-  serveHome: () => new Response(""),
-  serveKeys: () => new Response(""),
-  getPGPTarget: () => undefined,
-  servePGPKey: () => new Response(""),
-  servePGPKeyList: () => new Response(""),
-  sshKeys: [],
-  pgpKeys: [],
-  instanceName: "unit-tests",
-};
 
 const fakeKeys: PublicSSHKey[] = [
   {

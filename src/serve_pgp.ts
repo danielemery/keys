@@ -1,6 +1,6 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
-import { ServerDependencies } from "./server.ts";
 import { ContentType } from "./content-types.ts";
+import { ServerDependencies } from "./dependencies.ts";
 
 export const validPGPExtensions = ["asc", "pub", "pgp"] as const;
 export type ValidPGPExtension = typeof validPGPExtensions[number];

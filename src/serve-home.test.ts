@@ -1,19 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { serveHome } from "./serve-home.ts";
-import { ServerDependencies } from "./server.ts";
-
-const emptyDependencies: ServerDependencies = {
-  filterIncludesKey: () => false,
-  parseParameters: () => ({}),
-  serveHome: () => new Response(""),
-  serveKeys: () => new Response(""),
-  getPGPTarget: () => undefined,
-  servePGPKey: () => new Response(""),
-  servePGPKeyList: () => new Response(""),
-  sshKeys: [],
-  pgpKeys: [],
-  instanceName: "unit-tests",
-};
+import { emptyDependencies } from "./test_helpers.ts";
 
 Deno.test("serveKeys: must return 200 for valid requests", async () => {
   const response = await serveHome(

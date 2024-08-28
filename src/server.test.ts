@@ -1,6 +1,8 @@
-import { handleRequest, ServerDependencies } from "./server.ts";
+import { handleRequest } from "./server.ts";
 import { servePGPKeyList } from "./serve_pgp.ts";
 import { serveKeys } from "./serve-keys.ts";
+import { ServerDependencies } from "./dependencies.ts";
+import { emptyDependencies } from "./test_helpers.ts";
 
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import {
@@ -29,19 +31,6 @@ const fakeKeys = [
 const acceptPlainHeaders = new Headers({
   "Accept": "text/plain",
 });
-
-const emptyDependencies: ServerDependencies = {
-  filterIncludesKey: () => false,
-  parseParameters: () => ({}),
-  serveHome: () => new Response(""),
-  serveKeys: () => new Response(""),
-  getPGPTarget: () => undefined,
-  servePGPKey: () => new Response(""),
-  servePGPKeyList: () => new Response(""),
-  sshKeys: [],
-  pgpKeys: [],
-  instanceName: "unit-tests",
-};
 
 Deno.test(
   "handleRequest: must return 404 for unknown routes requests",

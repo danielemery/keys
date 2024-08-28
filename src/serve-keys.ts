@@ -1,5 +1,5 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
-import { ServerDependencies } from "./server.ts";
+import { ServerDependencies } from "./dependencies.ts";
 import { ContentType } from "./content-types.ts";
 
 export function serveKeys(

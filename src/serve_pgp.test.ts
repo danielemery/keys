@@ -1,3 +1,4 @@
+import { emptyDependencies } from "./test_helpers.ts";
 import {
   getPGPTarget,
   isValidPGPExtension,
@@ -6,20 +7,6 @@ import {
 } from "./serve_pgp.ts";
 
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
-import { ServerDependencies } from "./server.ts";
-
-const emptyDependencies: ServerDependencies = {
-  filterIncludesKey: () => false,
-  parseParameters: () => ({}),
-  serveHome: () => new Response(""),
-  serveKeys: () => new Response(""),
-  getPGPTarget: () => undefined,
-  servePGPKey: () => new Response(""),
-  servePGPKeyList: () => new Response(""),
-  sshKeys: [],
-  pgpKeys: [],
-  instanceName: "unit-tests",
-};
 
 Deno.test("servePGPKeyList (plain): must return the list of key names", async () => {
   const pgpKeys = [

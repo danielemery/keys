@@ -1,6 +1,6 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
 import { ContentType } from "./content-types.ts";
-import { ServerDependencies } from "./server.ts";
+import { ServerDependencies } from "./dependencies.ts";
 
 export function serveHome(
   version: string,
