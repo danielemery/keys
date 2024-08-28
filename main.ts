@@ -5,6 +5,7 @@ import { Sentry } from "./deps.ts";
 import loadConfig from "./src/load_config.ts";
 import { getPGPTarget, servePGPKey, servePGPKeyList } from "./src/serve_pgp.ts";
 import { serveKeys } from "./src/serve-keys.ts";
+import { serveHome } from "./src/serve-home.ts";
 
 const environment = parseEnvironmentVariables(Deno.env.toObject());
 
@@ -26,6 +27,7 @@ start(
   {
     filterIncludesKey,
     parseParameters,
+    serveHome,
     serveKeys,
     getPGPTarget,
     servePGPKey,
