@@ -1,4 +1,4 @@
-import { emptyDependencies } from "./test_helpers.ts";
+import { emptyDependencies } from "../../common/test_helpers.ts";
 import {
   getPGPTarget,
   isValidPGPExtension,

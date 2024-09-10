@@ -1,4 +1,4 @@
-import { z } from "../deps.ts";
+import { z } from "../../deps.ts";
 
 const environmentSchema = z.object({
   PORT: z.string().regex(/^\d+$/).transform(Number).default("8000"),

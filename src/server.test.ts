@@ -1,8 +1,8 @@
 import { handleRequest } from "./server.ts";
-import { servePGPKeyList } from "./serve_pgp.ts";
-import { serveKeys } from "./serve-keys.ts";
-import { ServerDependencies } from "./dependencies.ts";
-import { emptyDependencies } from "./test_helpers.ts";
+import { servePGPKeyList } from "./routes/pgp/serve_pgp.ts";
+import { serveKeys } from "./routes/keys/serve-keys.ts";
+import { ServerDependencies } from "./shared_types/dependencies.ts";
+import { emptyDependencies } from "./common/test_helpers.ts";
 
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import {

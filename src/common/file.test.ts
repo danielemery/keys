@@ -2,7 +2,7 @@ import {
   assertEquals,
   assertRejects,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { loadFileContents } from "./file.ts";
+import { loadFileContents } from "../common/file.ts";
 
 Deno.test("loadFileContents: must return file contents", async () => {
   const text = await loadFileContents("./fixtures/missing-key.yaml");

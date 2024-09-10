@@ -1,4 +1,4 @@
-import { PublicSSHKey } from "./load_config.ts";
+import { PublicSSHKey } from "../../config/load_config.ts";
 
 /** Available filter options. */
 export interface Filter {

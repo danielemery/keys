@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { getContentType, isValidContentType } from "./content-types.ts";
+import { getContentType, isValidContentType } from "../common/content-types.ts";
 
 Deno.test("isValidContentType: should return true for valid content types", () => {
   const validContentTypes = [

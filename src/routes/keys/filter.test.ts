@@ -1,5 +1,9 @@
 import { assertEquals } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { Filter, filterIncludesKey, parseParameters } from "./filter.ts";
+import {
+  Filter,
+  filterIncludesKey,
+  parseParameters,
+} from "../../routes/keys/filter.ts";
 
 /** parseParameters */
 Deno.test("parseParameters: must parse oneOf url param", () => {

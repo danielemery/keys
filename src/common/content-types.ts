@@ -1,4 +1,4 @@
-import { Accepts } from "../deps.ts";
+import { Accepts } from "../../deps.ts";
 
 const supportedContentTypes = [
   "text/plain",

@@ -2,8 +2,8 @@ import {
   assertEquals,
   assertThrows,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
-import { parseEnvironmentVariables } from "./environment.ts";
-import { ZodError } from "../deps.ts";
+import { parseEnvironmentVariables } from "../environment/environment.ts";
+import { ZodError } from "../../deps.ts";
 
 const baseVariables = {
   DOPPLER_ENVIRONMENT: "unit_tests",
