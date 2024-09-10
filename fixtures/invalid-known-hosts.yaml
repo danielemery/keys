@@ -1,0 +1,7 @@
+ssh-keys:
+  - name: key-one
+    key: "ssh-rsa my-key-one"
+    user: joeblogs
+known-hosts:
+  - name: example
+    hosts: hello, error

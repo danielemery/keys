@@ -30,6 +30,17 @@ const configSchema = z.object({
   ),
   "pgp-keys": z.array(z.object({ name: z.string(), key: z.string() }))
     .optional().default([]),
+  "known-hosts": z.array(z.object({
+    name: z.string().optional(),
+    hosts: z.array(z.string()),
+    keys: z.array(z.object({
+      type: z.string(),
+      key: z.string(),
+      comment: z.string().optional(),
+      revoked: z.boolean().optional().default(false),
+      "cert-authority": z.boolean().optional().default(false),
+    })),
+  })).optional().default([]),
 });
 
 export type Config = z.infer<typeof configSchema>;
