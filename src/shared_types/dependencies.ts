@@ -1,9 +1,13 @@
-import { filterIncludesKey, parseParameters } from "./filter.ts";
-import { PublicSSHKey } from "./load_config.ts";
-import { PGPKey } from "./load_config.ts";
-import { getPGPTarget, servePGPKey, servePGPKeyList } from "./serve_pgp.ts";
-import { serveKeys } from "./serve-keys.ts";
-import { serveHome } from "./serve-home.ts";
+import { filterIncludesKey, parseParameters } from "../routes/keys/filter.ts";
+import { PublicSSHKey } from "../config/load_config.ts";
+import { PGPKey } from "../config/load_config.ts";
+import {
+  getPGPTarget,
+  servePGPKey,
+  servePGPKeyList,
+} from "../routes/pgp/serve_pgp.ts";
+import { serveKeys } from "../routes/keys/serve-keys.ts";
+import { serveHome } from "../routes/serve-home.ts";
 
 /**
  * The dependencies required by the server.

@@ -1,6 +1,6 @@
 import { parse } from "jsr:@std/yaml";
-import { z } from "../deps.ts";
-import { loadFileContents } from "./file.ts";
+import { z } from "../../deps.ts";
+import { loadFileContents } from "../common/file.ts";
 
 export default async function loadConfig(path: string) {
   const contents = await loadFileContents(path);

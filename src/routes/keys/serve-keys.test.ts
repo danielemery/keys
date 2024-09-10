@@ -5,8 +5,8 @@ import {
   spy,
 } from "https://deno.land/std@0.204.0/testing/mock.ts";
 import { serveKeys } from "./serve-keys.ts";
-import { PublicSSHKey } from "./load_config.ts";
-import { emptyDependencies } from "./test_helpers.ts";
+import { PublicSSHKey } from "../../config/load_config.ts";
+import { emptyDependencies } from "../../common/test_helpers.ts";
 
 const TEST_URL = "http://localhost";
 

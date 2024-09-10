@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
 import { serveHome } from "./serve-home.ts";
-import { emptyDependencies } from "./test_helpers.ts";
+import { emptyDependencies } from "../common/test_helpers.ts";
 
 Deno.test("serveKeys: must return 200 for valid requests", async () => {
   const response = await serveHome(

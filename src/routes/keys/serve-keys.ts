@@ -1,6 +1,6 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
-import { ServerDependencies } from "./dependencies.ts";
-import { ContentType } from "./content-types.ts";
+import { ServerDependencies } from "../../shared_types/dependencies.ts";
+import { ContentType } from "../../common/content-types.ts";
 
 export function serveKeys(
   url: URL,

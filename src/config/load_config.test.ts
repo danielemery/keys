@@ -3,7 +3,7 @@ import {
   assertRejects,
 } from "https://deno.land/std@0.117.0/testing/asserts.ts";
 import loadConfig from "./load_config.ts";
-import { ZodError } from "../deps.ts";
+import { ZodError } from "../../deps.ts";
 
 Deno.test("loadConfig: must throw error if file is not found", async () => {
   await assertRejects(

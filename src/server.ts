@@ -1,6 +1,6 @@
 import { STATUS_CODE, STATUS_TEXT } from "@std/http";
-import { getContentType } from "./content-types.ts";
-import { ServerDependencies } from "./dependencies.ts";
+import { getContentType } from "./common/content-types.ts";
+import { ServerDependencies } from "./shared_types/dependencies.ts";
 
 /**
  * Start a simple http server that listens on the provided port and provides authorized keys based on query string filter

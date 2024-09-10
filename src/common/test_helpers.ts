@@ -1,4 +1,4 @@
-import { ServerDependencies } from "./dependencies.ts";
+import { ServerDependencies } from "../shared_types/dependencies.ts";
 
 /**
  * An empty set of dependencies.

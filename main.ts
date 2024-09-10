@@ -1,11 +1,18 @@
 import start from "./src/server.ts";
-import { filterIncludesKey, parseParameters } from "./src/filter.ts";
-import { parseEnvironmentVariables } from "./src/environment.ts";
+import {
+  filterIncludesKey,
+  parseParameters,
+} from "./src/routes/keys/filter.ts";
+import { parseEnvironmentVariables } from "./src/environment/environment.ts";
 import { Sentry } from "./deps.ts";
-import loadConfig from "./src/load_config.ts";
-import { getPGPTarget, servePGPKey, servePGPKeyList } from "./src/serve_pgp.ts";
-import { serveKeys } from "./src/serve-keys.ts";
-import { serveHome } from "./src/serve-home.ts";
+import loadConfig from "./src/config/load_config.ts";
+import {
+  getPGPTarget,
+  servePGPKey,
+  servePGPKeyList,
+} from "./src/routes/pgp/serve_pgp.ts";
+import { serveKeys } from "./src/routes/keys/serve-keys.ts";
+import { serveHome } from "./src/routes/serve-home.ts";
 
 const environment = parseEnvironmentVariables(Deno.env.toObject());
 
