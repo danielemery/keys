@@ -13,6 +13,24 @@ Deno.test("serveKeys: must return 200 for valid requests", async () => {
         tags: ["private"],
         user: "demery",
       }],
+      knownHosts: [{
+        name: "host-1",
+        hosts: ["example.com"],
+        keys: [
+          {
+            key: "ssh-rsa fake2",
+            type: "ssh-rsa",
+            "cert-authority": false,
+            revoked: false,
+          },
+          {
+            key: "ssh-ed25519 fake2",
+            type: "ssh-ed25519",
+            "cert-authority": false,
+            revoked: false,
+          },
+        ],
+      }],
     },
     "text/plain",
   );
@@ -24,6 +42,7 @@ Deno.test("serveKeys: must return 200 for valid requests", async () => {
     `Welcome to the "unit-tests" keys instance.
 There are 1 SSH keys available at /keys.
 There are 0 PGP keys available at /pgp.
+There are 2 known hosts available at /known_hosts.
 This server is running version unit-tests.`,
   );
 });

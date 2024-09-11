@@ -34,5 +34,11 @@ function generateTextBody(
   return `Welcome to the "${serverDependencies.instanceName}" keys instance.
 There are ${serverDependencies.sshKeys.length} SSH keys available at /keys.
 There are ${serverDependencies.pgpKeys.length} PGP keys available at /pgp.
+There are ${
+    serverDependencies.knownHosts.reduce(
+      (total, kh) => total + kh.keys.length,
+      0,
+    )
+  } known hosts available at /known_hosts.
 This server is running version ${version}.`;
 }
