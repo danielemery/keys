@@ -172,6 +172,32 @@ Deno.test("handleRequest: must call appropriate functions and return keys for pg
   assertEquals(await response.text(), "fake");
 });
 
+Deno.test('handleRequest: must call appropriate functions and return known hosts for "/known_hosts" route', async () => {
+  const serveKnownHostsSpy = spy(() => new Response("fake response"));
+
+  const url = `${TEST_URL}/known_hosts`;
+
+  const dependencies: ServerDependencies = {
+    ...emptyDependencies,
+    serveKnownHosts: serveKnownHostsSpy,
+    knownHosts: [],
+  };
+
+  const response = await handleRequest(
+    new Request(url, { headers: acceptPlainHeaders }),
+    dependencies,
+    "unit_tests",
+  );
+
+  assertSpyCalls(serveKnownHostsSpy, 1);
+  assertSpyCall(serveKnownHostsSpy, 0, {
+    args: ["unit_tests", dependencies, "text/plain"],
+  });
+
+  assertEquals(response.status, 200);
+  assertEquals(await response.text(), "fake response");
+});
+
 Deno.test(
   "handleRequest: must return 500 if unexpected error is thrown",
   async () => {

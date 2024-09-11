@@ -13,6 +13,7 @@ import {
 } from "./src/routes/pgp/serve_pgp.ts";
 import { serveKeys } from "./src/routes/keys/serve-keys.ts";
 import { serveHome } from "./src/routes/serve-home.ts";
+import { serveKnownHosts } from "./src/routes/known_hosts/serve-known-hosts.ts";
 
 const environment = parseEnvironmentVariables(Deno.env.toObject());
 
@@ -40,6 +41,7 @@ start(
     getPGPTarget,
     servePGPKey,
     servePGPKeyList,
+    serveKnownHosts,
     sshKeys,
     pgpKeys,
     knownHosts,

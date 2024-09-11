@@ -7,6 +7,7 @@ import {
 } from "../routes/pgp/serve_pgp.ts";
 import { serveKeys } from "../routes/keys/serve-keys.ts";
 import { serveHome } from "../routes/serve-home.ts";
+import { serveKnownHosts } from "../routes/known_hosts/serve-known-hosts.ts";
 
 /**
  * The dependencies required by the server.
@@ -21,6 +22,7 @@ export interface ServerDependencies {
   getPGPTarget: typeof getPGPTarget;
   servePGPKey: typeof servePGPKey;
   servePGPKeyList: typeof servePGPKeyList;
+  serveKnownHosts: typeof serveKnownHosts;
   sshKeys: PublicSSHKey[];
   pgpKeys: PGPKey[];
   knownHosts: KnownHost[];
