@@ -14,5 +14,6 @@ export const emptyDependencies: ServerDependencies = {
   servePGPKeyList: () => new Response(""),
   sshKeys: [],
   pgpKeys: [],
+  knownHosts: [],
   instanceName: "unit-tests",
 };

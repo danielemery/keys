@@ -177,3 +177,28 @@ pgp-keys:
       wACJnWrUiXq9+uZlBCcYKxWiVKa4ahMSENU9mulAs6uCO5NSCs1s
       =NiXa
       -----END PGP PUBLIC KEY BLOCK-----
+known-hosts:
+  - name: GitHub
+    hosts:
+      - github.com
+    keys:
+      - type: ssh-ed25519
+        key: "AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+      - type: ecdsa-sha2-nistp256
+        key: "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg="
+      - type: ssh-rsa 
+        key: AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+  - name: Oak
+    hosts:
+      - oak.home.demery.net
+      - oak
+      - 10.0.6.0
+    keys:
+      - type: ssh-ed25519
+        key: AAAAC3NzaC1lZDI1NTE5AAAAIPmEbpWjOUk56EsQTHz/6KWH6eeS7Xpd/Qa0G/uxylGQ
+      - type: ssh-rsa
+        key: AAAAB3NzaC1yc2EAAAADAQABAAACAQDExzmtD9//MOK2JHT7o04iRmgTgdRJEmtmhb6C53czRDEz3x41Zf/qTjHb97yCtiHDwvL+sX/PAxSDrvmCjMIj2Mbl3i5D45s4YG3Cbg55QLr+lt8rwp5eZSlFamfKpygEju6nwOAUariaRRhrLxWK5tk8YF0v03vQMeKaDFz6iM9vWnbV1mnOwG5r2CPdO6JsbPwRrNlhj1mcOESgr+jOuksDCG36t/ttti4MbHpVJbpiIvg8I92dgn+fPKrlPdSkzIsPG719doIjc3bw8ea3KMucLAMJRqZBYyXfX8Y0HNGQPjSKx+pxiuwHL4ZHxbi+BhQGPvMmEo7DYYqy6PmX1E7O+B3OP2TIPUCJsNu8wIE38HNrbADlMC9ovo0IFc+nQUtpggeT4WvEne4lYqLibR4Rwb4yxv4HiDhcpoBakdCIzvj0cQFi5UVzQ1joT3qWXyHADjHRCYAo0lJ1UPAcFvljwJR1yN5mPSvcplQ1w/WPzkFQn5fTFf2i/KM2EbHNH5aWbI7sIW8zlL6pGjlI3gsiBXVFfCQ6Xt3Di9ruR0cYfTmkgLgblcgJDgq1vLq1Ipe56/u48Ehe0WiEpIzJ3bFUSVHYX7zvoSVTBP3DuOGifvk1s6Q4MfnuOdr7u6OETSssemzHI43d0NINs4ketX/Q2/aS8/5ugpiJUfgSMQ==
+      - type: ssh-ed25519
+        key: AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+        revoked: true
+        comment: 'old leaked key'

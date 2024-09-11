@@ -25,9 +25,10 @@ if (environment.SENTRY_DSN) {
   });
 }
 
-const { "ssh-keys": sshKeys, "pgp-keys": pgpKeys } = await loadConfig(
-  environment.CONFIG_PATH,
-);
+const { "ssh-keys": sshKeys, "pgp-keys": pgpKeys, "known-hosts": knownHosts } =
+  await loadConfig(
+    environment.CONFIG_PATH,
+  );
 
 start(
   environment.PORT,
@@ -41,6 +42,7 @@ start(
     servePGPKeyList,
     sshKeys,
     pgpKeys,
+    knownHosts,
     instanceName: environment.INSTANCE_NAME,
   },
   environment.KEYS_VERSION,

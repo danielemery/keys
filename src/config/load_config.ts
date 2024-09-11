@@ -46,3 +46,4 @@ const configSchema = z.object({
 export type Config = z.infer<typeof configSchema>;
 export type PublicSSHKey = z.infer<typeof configSchema>["ssh-keys"][number];
 export type PGPKey = z.infer<typeof configSchema>["pgp-keys"][number];
+export type KnownHost = z.infer<typeof configSchema>["known-hosts"][number];

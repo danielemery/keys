@@ -1,6 +1,5 @@
 import { filterIncludesKey, parseParameters } from "../routes/keys/filter.ts";
-import { PublicSSHKey } from "../config/load_config.ts";
-import { PGPKey } from "../config/load_config.ts";
+import { KnownHost, PGPKey, PublicSSHKey } from "../config/load_config.ts";
 import {
   getPGPTarget,
   servePGPKey,
@@ -24,4 +23,5 @@ export interface ServerDependencies {
   servePGPKeyList: typeof servePGPKeyList;
   sshKeys: PublicSSHKey[];
   pgpKeys: PGPKey[];
+  knownHosts: KnownHost[];
 }
