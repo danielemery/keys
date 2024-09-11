@@ -24,6 +24,7 @@ Deno.test("serveKeys: must return 200 for valid requests", async () => {
     `Welcome to the "unit-tests" keys instance.
 There are 1 SSH keys available at /keys.
 There are 0 PGP keys available at /pgp.
+There are 0 known hosts available at /known_hosts.
 This server is running version unit-tests.`,
   );
 });
