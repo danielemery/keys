@@ -27,6 +27,7 @@ const validSSHKeyRoutes = [
 ];
 const validPGPKeyRoutes = ["/pgp", "/pgp/"];
 const validHomeRoutes = ["/"];
+const validKnownHostsRoutes = ["/known_hosts", "/known_hosts/"];
 
 export function handleRequest(
   req: Request,
@@ -36,8 +37,14 @@ export function handleRequest(
   // Extract content type
   const contentType = getContentType(req.headers);
 
-  const { serveHome, serveKeys, servePGPKeyList, getPGPTarget, servePGPKey } =
-    dependencies;
+  const {
+    serveHome,
+    serveKeys,
+    servePGPKeyList,
+    getPGPTarget,
+    servePGPKey,
+    serveKnownHosts,
+  } = dependencies;
   try {
     const url = new URL(req.url);
 
@@ -63,6 +70,11 @@ export function handleRequest(
     // For each supported home endpoint serve the home page
     if (validHomeRoutes.includes(url.pathname)) {
       return serveHome(version, dependencies, contentType);
+    }
+
+    // For each supported known_hosts endpoint serve the known_hosts file
+    if (validKnownHostsRoutes.includes(url.pathname)) {
+      return serveKnownHosts(version, dependencies, contentType);
     }
 
     // If the url is not recognized, return a 404.

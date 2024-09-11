@@ -12,6 +12,7 @@ export const emptyDependencies: ServerDependencies = {
   getPGPTarget: () => undefined,
   servePGPKey: () => new Response(""),
   servePGPKeyList: () => new Response(""),
+  serveKnownHosts: () => new Response(""),
   sshKeys: [],
   pgpKeys: [],
   knownHosts: [],
