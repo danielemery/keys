@@ -41,6 +41,17 @@ curl "https://keys.demery.net/keys?user=demery&allOf=oak&noneOf=disabled" > ~/.s
 cat ~/.ssh/authorized_keys
 ```
 
+### Update known hosts file
+
+_Replaces the `known_hosts` file with the hosts in your keys instance_
+
+```sh
+# Consider backup first
+cp ~/.ssh/known_hosts ~/.ssh/known_hosts.`date '+%Y-%m-%d__%H_%M_%S'`.backup
+# Override file with the hosts from the keys instance
+curl http://localhost:8000/known_hosts > ~/.ssh/known_hosts
+```
+
 ## Running / Installation
 
 ### Configuration File
@@ -49,7 +60,7 @@ Regardless of the method of deployment, the `keys` application requires a config
 yaml file containing the list of keys to be served. An example file can be found
 in `./examples/keys-config.yaml`.
 
-The config file contains two main sections:
+The config file contains three main sections:
 
 - `ssh-keys`: A list of public ssh keys with the following fields:
   - name: The name of the key (this will be used as the `@host` in the
@@ -62,6 +73,20 @@ The config file contains two main sections:
   - name: The name of the key (this will be used in the route and as the
     filename if you download the key)
   - key: The public key itself
+- `known-hosts`: A list of known hosts with the following fields:
+  - name: Optional name for the entry, it's not used in the `known_hosts` file
+    and is just for your records
+  - hosts: A list of hostnames or IPs that the key(s) should be associated with
+  - keys: A list of known keys that should be associated with the host, with the
+    following fields:
+    - type: The type of key (eg `ssh-rsa`)
+    - key: The public key itself
+    - comment: Optional comment for the entry (will be appended to the key in
+      the `known_hosts` file)
+    - revoked: Optional boolean to indicate that the key should be considered
+      revoked (adds the @revoked marker in the known hosts file)
+    - cert-authority: Optional boolean to indicate that the key is a certificate
+      authority (adds the @cert-authority marker in the known hosts file)
 
 ### Helm
 
