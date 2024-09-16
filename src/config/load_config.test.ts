@@ -96,6 +96,7 @@ Deno.test("loadConfig: must load valid config with ssh keys", async () => {
       },
     ],
     "pgp-keys": [],
+    "known-hosts": [],
   });
 });
 
@@ -119,6 +120,82 @@ fake1
 fake2
 -----END PGP PUBLIC KEY BLOCK-----
 `,
+      },
+    ],
+    "known-hosts": [],
+  });
+});
+
+Deno.test("loadConfig: must throw zod error if known hosts are not valid", async () => {
+  await assertRejects(
+    async () => {
+      await loadConfig("./fixtures/invalid-known-hosts.yaml");
+    },
+    ZodError,
+    `{
+    "code": "invalid_type",
+    "expected": "array",
+    "received": "string",
+    "path": [
+      "known-hosts",
+      0,
+      "hosts"
+    ],
+    "message": "Expected array, received string"
+  }`,
+  );
+  await assertRejects(
+    async () => {
+      await loadConfig("./fixtures/invalid-known-hosts.yaml");
+    },
+    ZodError,
+    `{
+    "code": "invalid_type",
+    "expected": "array",
+    "received": "undefined",
+    "path": [
+      "known-hosts",
+      0,
+      "keys"
+    ],
+    "message": "Required"
+  }`,
+  );
+});
+
+Deno.test("loadConfig: must load valid config with known hosts", async () => {
+  const config = await loadConfig("./fixtures/valid-known-hosts.yaml");
+  assertEquals(config, {
+    "ssh-keys": [
+      {
+        key: "ssh-rsa my-key-one",
+        name: "key-one",
+        tags: [],
+        user: "joeblogs",
+      },
+    ],
+    "pgp-keys": [],
+    "known-hosts": [
+      {
+        name: "example",
+        hosts: [
+          "example.com",
+        ],
+        keys: [
+          {
+            comment: "An example key",
+            key: "fake-ed25519-key",
+            revoked: false,
+            "cert-authority": false,
+            type: "ssh-ed25519",
+          },
+          {
+            key: "fake rsa key",
+            revoked: false,
+            "cert-authority": false,
+            type: "ssh-rsa",
+          },
+        ],
       },
     ],
   });

@@ -1,0 +1,14 @@
+ssh-keys:
+  - name: key-one
+    key: "ssh-rsa my-key-one"
+    user: joeblogs
+known-hosts:
+  - name: example
+    hosts:
+      - example.com
+    keys:
+      - type: ssh-ed25519
+        key: "fake-ed25519-key"
+        comment: An example key
+      - type: ssh-rsa
+        key: "fake rsa key"

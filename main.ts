@@ -13,6 +13,7 @@ import {
 } from "./src/routes/pgp/serve_pgp.ts";
 import { serveKeys } from "./src/routes/keys/serve-keys.ts";
 import { serveHome } from "./src/routes/serve-home.ts";
+import { serveKnownHosts } from "./src/routes/known_hosts/serve-known-hosts.ts";
 
 const environment = parseEnvironmentVariables(Deno.env.toObject());
 
@@ -25,9 +26,10 @@ if (environment.SENTRY_DSN) {
   });
 }
 
-const { "ssh-keys": sshKeys, "pgp-keys": pgpKeys } = await loadConfig(
-  environment.CONFIG_PATH,
-);
+const { "ssh-keys": sshKeys, "pgp-keys": pgpKeys, "known-hosts": knownHosts } =
+  await loadConfig(
+    environment.CONFIG_PATH,
+  );
 
 start(
   environment.PORT,
@@ -39,8 +41,10 @@ start(
     getPGPTarget,
     servePGPKey,
     servePGPKeyList,
+    serveKnownHosts,
     sshKeys,
     pgpKeys,
+    knownHosts,
     instanceName: environment.INSTANCE_NAME,
   },
   environment.KEYS_VERSION,
