@@ -55,7 +55,8 @@ export function handleRequest(
 
     /**
      * If the url is /pgp/${some_key} then return the pgp key body.
-     * If a file extension is included in the url, content disposition headers are set to indicate download is preferred.
+     * If a file extension is included in the url, content disposition headers are set to indicate download is preferred
+     * and the content type is ignored.
      */
     const pgpKeyTarget = getPGPTarget(url.pathname);
     if (pgpKeyTarget) {
