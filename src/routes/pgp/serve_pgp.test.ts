@@ -124,6 +124,23 @@ Deno.test("servePGPKey (plain): must return the key with content disposition if 
   );
 });
 
+Deno.test("servePGPKey (html): must ignore the content type and return the plain text key with content disposition if an extension is provided", async () => {
+  const response = await servePGPKey(
+    { name: "key", extension: "asc" },
+    "1",
+    { ...emptyDependencies, pgpKeys: [{ name: "key", key: "key" }] },
+    "text/html",
+  );
+  assertEquals(response.status, 200);
+  assertEquals(response.statusText, "OK");
+  assertEquals(await response.text(), "key");
+  assertEquals(response.headers.get("X-Keys-Version"), "1");
+  assertEquals(
+    response.headers.get("Content-Disposition"),
+    'attachment; filename="key.asc"',
+  );
+});
+
 Deno.test("servePGPKey: must return 406 for unsupported content types", async () => {
   const response = await servePGPKey(
     { name: "key" },

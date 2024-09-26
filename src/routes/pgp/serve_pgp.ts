@@ -79,7 +79,9 @@ export function servePGPKey(
     });
   }
 
-  switch (contentType) {
+  const overridenContentType = target.extension ? "text/plain" : contentType;
+
+  switch (overridenContentType) {
     case "text/plain":
       return new Response(key.key, {
         status: STATUS_CODE.OK,
