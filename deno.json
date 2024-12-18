@@ -1,5 +1,10 @@
 {
   "imports": {
     "@std/http": "jsr:@std/http@^0.224.5"
-  }
+  },
+  "exclude": [
+    "examples",
+    "fixtures",
+    "helm"
+  ]
 }
