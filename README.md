@@ -17,9 +17,7 @@ machine. This is currently done with manual curl commands, and not typically
 automated with a CRON due to the risk of losing access to machines as a result
 of the service being down or misconfigured.
 
-In the future ([#24](https://github.com/danielemery/keys/issues/24)) a cli tool
-will be provided to safely manage the `authorized_keys` file with guards in
-place to prevent loss of access.
+A CLI tool is now available to interact with the keys server. See the [CLI README](/cli/README.md) for more information on installation and usage.
 
 ### Get all listed keys
 
