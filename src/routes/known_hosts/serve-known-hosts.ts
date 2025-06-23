@@ -24,6 +24,31 @@ export function serveKnownHosts(
         statusText: STATUS_TEXT[STATUS_CODE.OK],
         headers: {
           "X-Keys-Version": version,
+          "Content-Type": "text/plain",
+        },
+      });
+    }
+    case "application/json": {
+      const jsonData = {
+        version,
+        knownHosts: dependencies.knownHosts.map((knownHost) => ({
+          name: knownHost.name,
+          hosts: knownHost.hosts,
+          keys: knownHost.keys.map((key) => ({
+            type: key.type,
+            key: key.key,
+            comment: key.comment,
+            revoked: key.revoked,
+            "cert-authority": key["cert-authority"],
+          })),
+        })),
+      };
+      return new Response(JSON.stringify(jsonData), {
+        status: STATUS_CODE.OK,
+        statusText: STATUS_TEXT[STATUS_CODE.OK],
+        headers: {
+          "X-Keys-Version": version,
+          "Content-Type": "application/json",
         },
       });
     }

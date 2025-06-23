@@ -32,8 +32,32 @@ Deno.test("servePGPKeyList (plain): must return an empty list if no keys are loa
   assertEquals(await response.text(), "");
 });
 
+Deno.test("servePGPKeyList (json): must return the list of keys with names and contents in JSON format", async () => {
+  const pgpKeys = [
+    { name: "key1", key: "key1" },
+    { name: "key2", key: "key2" },
+  ];
+  const response = servePGPKeyList(
+    "1",
+    { ...emptyDependencies, pgpKeys },
+    "application/json",
+  );
+  assertEquals(response.status, 200);
+  assertEquals(response.statusText, "OK");
+  assertEquals(response.headers.get("X-Keys-Version"), "1");
+  assertEquals(response.headers.get("Content-Type"), "application/json");
+
+  const jsonResponse = await response.json();
+  assertEquals(jsonResponse.version, "1");
+  assertEquals(jsonResponse.keys.length, 2);
+  assertEquals(jsonResponse.keys[0].name, "key1");
+  assertEquals(jsonResponse.keys[0].key, "key1");
+  assertEquals(jsonResponse.keys[1].name, "key2");
+  assertEquals(jsonResponse.keys[1].key, "key2");
+});
+
 Deno.test("servePGPKeyList: must return 406 for unsupported content types", () => {
-  const response = servePGPKeyList("1", emptyDependencies, "application/json");
+  const response = servePGPKeyList("1", emptyDependencies, "text/html");
   assertEquals(response.status, 406);
   assertEquals(response.statusText, "Not Acceptable");
 });
@@ -146,8 +170,26 @@ Deno.test("servePGPKey: must return 406 for unsupported content types", async ()
     { name: "key" },
     "1",
     { ...emptyDependencies, pgpKeys: [{ name: "key", key: "key" }] },
-    "application/json",
+    "text/html",
   );
   assertEquals(response.status, 406);
   assertEquals(response.statusText, "Not Acceptable");
+});
+
+Deno.test("servePGPKey (json): must return the key in JSON format", async () => {
+  const response = await servePGPKey(
+    { name: "key" },
+    "1",
+    { ...emptyDependencies, pgpKeys: [{ name: "key", key: "key-content" }] },
+    "application/json",
+  );
+  assertEquals(response.status, 200);
+  assertEquals(response.statusText, "OK");
+  assertEquals(response.headers.get("X-Keys-Version"), "1");
+  assertEquals(response.headers.get("Content-Type"), "application/json");
+
+  const jsonResponse = await response.json();
+  assertEquals(jsonResponse.version, "1");
+  assertEquals(jsonResponse.key.name, "key");
+  assertEquals(jsonResponse.key.key, "key-content");
 });

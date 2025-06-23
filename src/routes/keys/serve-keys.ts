@@ -24,6 +24,27 @@ export function serveKeys(
         statusText: STATUS_TEXT[STATUS_CODE.OK],
         headers: {
           "X-Keys-Version": version,
+          "Content-Type": "text/plain",
+        },
+      });
+    }
+    case "application/json": {
+      const jsonData = {
+        version,
+        keys: filteredKeys.map((key) => ({
+          key: key.key,
+          user: key.user,
+          name: key.name,
+          tags: key.tags,
+        })),
+      };
+
+      return new Response(JSON.stringify(jsonData), {
+        status: STATUS_CODE.OK,
+        statusText: STATUS_TEXT[STATUS_CODE.OK],
+        headers: {
+          "X-Keys-Version": version,
+          "Content-Type": "application/json",
         },
       });
     }

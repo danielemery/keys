@@ -23,6 +23,24 @@ export function servePGPKeyList(
         statusText: STATUS_TEXT[STATUS_CODE.OK],
         headers: {
           "X-Keys-Version": version,
+          "Content-Type": "text/plain",
+        },
+      });
+    }
+    case "application/json": {
+      const jsonData = {
+        version,
+        keys: dependencies.pgpKeys.map((key) => ({
+          name: key.name,
+          key: key.key,
+        })),
+      };
+      return new Response(JSON.stringify(jsonData), {
+        status: STATUS_CODE.OK,
+        statusText: STATUS_TEXT[STATUS_CODE.OK],
+        headers: {
+          "X-Keys-Version": version,
+          "Content-Type": "application/json",
         },
       });
     }
@@ -88,6 +106,7 @@ export function servePGPKey(
         statusText: STATUS_TEXT[STATUS_CODE.OK],
         headers: {
           "X-Keys-Version": version,
+          "Content-Type": "text/plain",
           ...(target.extension
             ? {
               "Content-Disposition":
@@ -96,6 +115,24 @@ export function servePGPKey(
             : {}),
         },
       });
+    case "application/json":
+      return new Response(
+        JSON.stringify({
+          version,
+          key: {
+            name: key.name,
+            key: key.key,
+          },
+        }),
+        {
+          status: STATUS_CODE.OK,
+          statusText: STATUS_TEXT[STATUS_CODE.OK],
+          headers: {
+            "X-Keys-Version": version,
+            "Content-Type": "application/json",
+          },
+        },
+      );
     default:
       return new Response(undefined, {
         status: STATUS_CODE.NotAcceptable,
