@@ -6,3 +6,4 @@ pub mod ssh_keys;
 pub use known_hosts::fetch_known_hosts;
 pub use pgp_keys::fetch_pgp_keys;
 pub use ssh_keys::fetch_ssh_keys;
+pub use ssh_keys::write_ssh_keys;
