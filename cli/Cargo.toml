@@ -14,3 +14,8 @@ colored = "2.0"
 atty = "0.2"
 toml = "0.8.8"
 directories = "5.0.1"
+shellexpand = "3.1.0"
+
+[dev-dependencies]
+mockito = "1.2.0"
+tempfile = "3.8.0"

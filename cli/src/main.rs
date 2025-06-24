@@ -22,8 +22,16 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Fetch SSH keys from the server
-    Keys {},
+    /// Fetch or write SSH keys from the server
+    Keys {
+        /// Write keys to authorized_keys file
+        #[arg(short, long)]
+        write: Option<String>,
+
+        /// Force overwrite existing keys (default is to only add new keys)
+        #[arg(short, long)]
+        force: bool,
+    },
 
     /// Fetch PGP keys from the server
     PgpKeys {},
@@ -45,8 +53,12 @@ fn main() -> Result<()> {
     let server_url = cli.server.unwrap_or(config.server_url);
 
     match &cli.command {
-        Commands::Keys {} => {
-            commands::fetch_ssh_keys(&server_url)?;
+        Commands::Keys { write, force } => {
+            if let Some(path) = write {
+                commands::write_ssh_keys(&server_url, path, *force)?;
+            } else {
+                commands::fetch_ssh_keys(&server_url)?;
+            }
         }
         Commands::PgpKeys {} => {
             commands::fetch_pgp_keys(&server_url)?;
