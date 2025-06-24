@@ -52,6 +52,38 @@ cp ~/.ssh/known_hosts ~/.ssh/known_hosts.`date '+%Y-%m-%d__%H_%M_%S'`.backup
 curl http://localhost:8000/known_hosts > ~/.ssh/known_hosts
 ```
 
+## JSON API
+
+All endpoints also support JSON responses. You can request JSON by setting the
+`Accept` header to `application/json`.
+
+### Get PGP keys as JSON
+
+```sh
+# Get list of all PGP keys in JSON format
+curl -H "Accept: application/json" "https://keys.demery.net/pgp"
+
+# Get a specific PGP key in JSON format
+curl -H "Accept: application/json" "https://keys.demery.net/pgp/key-name"
+```
+
+### Get SSH keys as JSON
+
+```sh
+# Get all SSH keys in JSON format
+curl -H "Accept: application/json" "https://keys.demery.net/keys"
+
+# Get filtered SSH keys in JSON format
+curl -H "Accept: application/json" "https://keys.demery.net/keys?user=demery&allOf=oak&noneOf=disabled"
+```
+
+### Get known hosts as JSON
+
+```sh
+# Get all known hosts in JSON format
+curl -H "Accept: application/json" "https://keys.demery.net/known_hosts"
+```
+
 ## Running / Installation
 
 ### Configuration File
