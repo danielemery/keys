@@ -43,3 +43,49 @@ jobs:
         uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          flags: deno-server
+
+  test-rust-cli:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Check Rust formatting
+        working-directory: ./cli
+        run: cargo fmt --all -- --check
+
+      - name: Lint with clippy
+        working-directory: ./cli
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Build Rust CLI
+        working-directory: ./cli
+        run: cargo build
+
+      - name: Run Rust tests with coverage
+        working-directory: ./cli
+        run: cargo llvm-cov --lcov --output-path lcov.info
+
+      - name: Upload Rust coverage to Codecov
+        uses: codecov/codecov-action@v5
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: ./cli/lcov.info
+          flags: rust-cli
