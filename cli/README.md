@@ -17,11 +17,14 @@ A command-line interface for interacting with the keys server.
 ## Usage
 
 ```bash
-# Basic usage
-keys-cli --server http://localhost:8000
+# Fetch SSH keys
+keys-cli --server http://localhost:8000 keys
 
-# Display help
+# Display help for the whole CLI
 keys-cli --help
+
+# Display help for a specific subcommand
+keys-cli keys --help
 ```
 
 ## Building
@@ -38,5 +41,6 @@ The compiled binary will be available in `target/release/keys-cli`.
 To test the CLI during development, you can run:
 
 ```bash
-cargo run -- --server http://localhost:8000
+# Run with the keys subcommand
+cargo run -- --server http://localhost:8000 keys
 ```
