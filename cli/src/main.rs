@@ -1,9 +1,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-mod commands;
-mod config;
-mod utils;
+use keys::{commands, config};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -55,16 +53,16 @@ fn main() -> Result<()> {
     match &cli.command {
         Commands::Ssh { write, force } => {
             if let Some(path) = write {
-                commands::write_ssh_keys(&server_url, path, *force)?;
+                commands::ssh_keys::write_ssh_keys(&server_url, path, *force)?;
             } else {
-                commands::fetch_ssh_keys(&server_url)?;
+                commands::ssh_keys::fetch_ssh_keys(&server_url)?;
             }
         }
         Commands::Pgp {} => {
-            commands::fetch_pgp_keys(&server_url)?;
+            commands::pgp_keys::fetch_pgp_keys(&server_url)?;
         }
         Commands::KnownHosts {} => {
-            commands::fetch_known_hosts(&server_url)?;
+            commands::known_hosts::fetch_known_hosts(&server_url)?;
         }
         Commands::Init {} => {
             // Create a default config file
