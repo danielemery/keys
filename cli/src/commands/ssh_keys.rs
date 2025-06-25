@@ -134,8 +134,9 @@ pub fn fetch_ssh_keys(server_url: &str) -> Result<()> {
     // Check if the output is being piped (not connected to a terminal)
     // Use raw/minimal output when piped to another command
     if !atty::is(atty::Stream::Stdout) {
-        for key in &keys_response.keys {
-            println!("{}", key.key);
+        let output = format_keys_for_pipe(&keys_response);
+        if !output.is_empty() {
+            println!("{output}");
         }
         return Ok(());
     }
@@ -144,6 +145,16 @@ pub fn fetch_ssh_keys(server_url: &str) -> Result<()> {
     pretty_print_ssh_keys(&keys_response);
 
     Ok(())
+}
+
+/// Helper function to format keys for non-TTY output (used for testing)
+fn format_keys_for_pipe(keys_response: &KeysResponse) -> String {
+    keys_response
+        .keys
+        .iter()
+        .map(|key| key.key.clone())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<()> {
@@ -597,5 +608,127 @@ mod tests {
 
         // Cleanup
         drop(temp_dir);
+    }
+
+    #[test]
+    fn test_pretty_print_ssh_keys() {
+        // Create a test response with various key data
+        let keys_response = KeysResponse {
+            version: "1.2.3".to_string(),
+            keys: vec![
+                SSHKey {
+                    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7".to_string(),
+                    user: "alice".to_string(),
+                    name: "work-laptop".to_string(),
+                    tags: vec!["dev".to_string(), "work".to_string()],
+                },
+                SSHKey {
+                    key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI".to_string(),
+                    user: "bob".to_string(),
+                    name: "home-desktop".to_string(),
+                    tags: vec!["personal".to_string()],
+                },
+                SSHKey {
+                    key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQD".to_string(),
+                    user: "charlie".to_string(),
+                    name: "server".to_string(),
+                    tags: vec![],
+                },
+            ],
+        };
+
+        // This test primarily verifies the function doesn't panic and handles the data correctly
+        // Since pretty_print_ssh_keys outputs to stdout, we can't easily capture and verify output
+        // in this test environment, but we can verify it completes without errors
+        pretty_print_ssh_keys(&keys_response);
+    }
+
+    #[test]
+    fn test_pretty_print_ssh_keys_empty() {
+        // Test with empty keys list
+        let keys_response = KeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![],
+        };
+
+        // Should handle empty keys gracefully
+        pretty_print_ssh_keys(&keys_response);
+    }
+
+    #[test]
+    fn test_fetch_ssh_keys_piped_output() {
+        // Setup mock server
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "keys": [
+                {"key": "ssh-rsa AAAAB1", "user": "user1", "name": "key1", "tags": ["dev"]},
+                {"key": "ssh-rsa AAAAB2", "user": "user2", "name": "key2", "tags": ["prod"]}
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Note: Testing the non-TTY path is challenging because atty::is() checks the actual stdout
+        // In a real test environment, we can't easily mock this behavior
+        // This test verifies the function completes successfully, but the actual output format
+        // depends on whether the test is run in a TTY or not
+        let result = fetch_ssh_keys(&server_url);
+        assert!(result.is_ok(), "fetch_ssh_keys failed: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_format_keys_for_pipe() {
+        // Test with multiple keys
+        let keys_response = KeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![
+                SSHKey {
+                    key: "ssh-rsa AAAAB1".to_string(),
+                    user: "user1".to_string(),
+                    name: "key1".to_string(),
+                    tags: vec!["dev".to_string()],
+                },
+                SSHKey {
+                    key: "ssh-ed25519 AAAAC1".to_string(),
+                    user: "user2".to_string(),
+                    name: "key2".to_string(),
+                    tags: vec!["prod".to_string()],
+                },
+            ],
+        };
+
+        let output = format_keys_for_pipe(&keys_response);
+        assert_eq!(output, "ssh-rsa AAAAB1\nssh-ed25519 AAAAC1");
+    }
+
+    #[test]
+    fn test_format_keys_for_pipe_empty() {
+        // Test with no keys
+        let keys_response = KeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![],
+        };
+
+        let output = format_keys_for_pipe(&keys_response);
+        assert_eq!(output, "");
+    }
+
+    #[test]
+    fn test_format_keys_for_pipe_single_key() {
+        // Test with a single key
+        let keys_response = KeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![SSHKey {
+                key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7".to_string(),
+                user: "alice".to_string(),
+                name: "laptop".to_string(),
+                tags: vec!["work".to_string(), "dev".to_string()],
+            }],
+        };
+
+        let output = format_keys_for_pipe(&keys_response);
+        assert_eq!(output, "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7");
     }
 }
