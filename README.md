@@ -17,7 +17,8 @@ machine. This is currently done with manual curl commands, and not typically
 automated with a CRON due to the risk of losing access to machines as a result
 of the service being down or misconfigured.
 
-A CLI tool is now available to interact with the keys server. See the [CLI README](/cli/README.md) for more information on installation and usage.
+A CLI tool is now available to interact with the keys server. See the
+[CLI README](/cli/README.md) for more information on installation and usage.
 
 ### Get all listed keys
 
