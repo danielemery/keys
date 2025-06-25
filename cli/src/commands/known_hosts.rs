@@ -217,3 +217,471 @@ pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mockito;
+
+    // Helper function to create a mock server
+    fn setup_mock_server(response_body: &str) -> (String, mockito::ServerGuard) {
+        let mut mock_server = mockito::Server::new();
+
+        mock_server
+            .mock("GET", "/known_hosts")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(response_body)
+            .create();
+
+        (mock_server.url(), mock_server)
+    }
+
+    // Helper function to create a mock server with error response
+    fn setup_mock_server_with_error(
+        status_code: usize,
+        response_body: &str,
+    ) -> (String, mockito::ServerGuard) {
+        let mut mock_server = mockito::Server::new();
+
+        mock_server
+            .mock("GET", "/known_hosts")
+            .with_status(status_code)
+            .with_header("content-type", "application/json")
+            .with_body(response_body)
+            .create();
+
+        (mock_server.url(), mock_server)
+    }
+
+    #[test]
+    fn test_fetch_known_hosts_success() {
+        // Setup mock server with known hosts response
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "name": "GitHub",
+                    "hosts": ["github.com", "*.github.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7",
+                            "comment": "GitHub RSA key",
+                            "revoked": false,
+                            "cert-authority": false
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Call function
+        let result = fetch_known_hosts(&server_url);
+        assert!(
+            result.is_ok(),
+            "fetch_known_hosts failed: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_fetch_known_hosts_server_error() {
+        // Setup mock server with error response
+        let (server_url, _server) =
+            setup_mock_server_with_error(500, r#"{"error": "Internal server error"}"#);
+
+        // Call function
+        let result = fetch_known_hosts(&server_url);
+
+        // Should return an error
+        assert!(result.is_err());
+        let error_msg = result.err().unwrap().to_string();
+        assert!(error_msg.contains("Server returned error code: 500"));
+    }
+
+    #[test]
+    fn test_fetch_known_hosts_malformed_response() {
+        // Setup mock server with malformed JSON
+        let (server_url, _server) =
+            setup_mock_server(r#"{"version": "1.0.0", "knownHosts": [{"incomplete": true}]}"#);
+
+        // Call function
+        let result = fetch_known_hosts(&server_url);
+
+        // Should return an error due to missing required fields
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_fetch_known_hosts_empty_response() {
+        // Setup mock server with empty known hosts array
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": []
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Call function
+        let result = fetch_known_hosts(&server_url);
+        assert!(
+            result.is_ok(),
+            "fetch_known_hosts failed: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_fetch_known_hosts_multiple_hosts_and_keys() {
+        // Setup mock server with multiple hosts and keys
+        let mock_response = r#"
+        {
+            "version": "2.1.0",
+            "knownHosts": [
+                {
+                    "name": "GitHub",
+                    "hosts": ["github.com", "*.github.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7GitHub1",
+                            "comment": "GitHub RSA key"
+                        },
+                        {
+                            "type": "ssh-ed25519",
+                            "key": "AAAAC3NzaC1lZDI1NTE5AAAAIGitHub2",
+                            "comment": "GitHub Ed25519 key"
+                        }
+                    ]
+                },
+                {
+                    "name": "GitLab",
+                    "hosts": ["gitlab.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7GitLab1",
+                            "comment": "GitLab RSA key",
+                            "revoked": true
+                        }
+                    ]
+                },
+                {
+                    "hosts": ["example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-ed25519",
+                            "key": "AAAAC3NzaC1lZDI1NTE5AAAAIExample1",
+                            "cert-authority": true
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Call function
+        let result = fetch_known_hosts(&server_url);
+        assert!(
+            result.is_ok(),
+            "fetch_known_hosts failed: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_fetch_known_hosts_with_flags() {
+        // Setup mock server with keys that have revoked and cert-authority flags
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "name": "Test Host",
+                    "hosts": ["test.example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7Revoked",
+                            "comment": "Revoked key",
+                            "revoked": true,
+                            "cert-authority": false
+                        },
+                        {
+                            "type": "ssh-ed25519",
+                            "key": "AAAAC3NzaC1lZDI1NTE5AAAAICertAuth",
+                            "comment": "CA key",
+                            "revoked": false,
+                            "cert-authority": true
+                        },
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7Both",
+                            "comment": "Both flags",
+                            "revoked": true,
+                            "cert-authority": true
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Call function
+        let result = fetch_known_hosts(&server_url);
+        assert!(
+            result.is_ok(),
+            "fetch_known_hosts failed: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_pretty_print_known_hosts() {
+        // Create a test response with various host and key data
+        let known_hosts_response = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![
+                KnownHost {
+                    name: Some("GitHub".to_string()),
+                    hosts: vec!["github.com".to_string(), "*.github.com".to_string()],
+                    keys: vec![
+                        HostKey {
+                            key_type: "ssh-rsa".to_string(),
+                            key: "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7GitHub".to_string(),
+                            comment: Some("GitHub RSA key".to_string()),
+                            revoked: Some(false),
+                            cert_authority: Some(false),
+                        },
+                        HostKey {
+                            key_type: "ssh-ed25519".to_string(),
+                            key: "AAAAC3NzaC1lZDI1NTE5AAAAIGitHub2".to_string(),
+                            comment: None,
+                            revoked: None,
+                            cert_authority: Some(true),
+                        },
+                    ],
+                },
+                KnownHost {
+                    name: None,
+                    hosts: vec!["example.com".to_string()],
+                    keys: vec![HostKey {
+                        key_type: "ssh-rsa".to_string(),
+                        key: "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7Example".to_string(),
+                        comment: Some("Example key".to_string()),
+                        revoked: Some(true),
+                        cert_authority: Some(false),
+                    }],
+                },
+            ],
+        };
+
+        // This test primarily verifies the function doesn't panic and handles the data correctly
+        // Since pretty_print_known_hosts outputs to stdout, we can't easily capture and verify output
+        // in this test environment, but we can verify it completes without errors
+        pretty_print_known_hosts(&known_hosts_response);
+    }
+
+    #[test]
+    fn test_pretty_print_known_hosts_empty() {
+        // Test with empty hosts list
+        let known_hosts_response = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![],
+        };
+
+        // Should handle empty hosts gracefully
+        pretty_print_known_hosts(&known_hosts_response);
+    }
+
+    #[test]
+    fn test_pretty_print_known_hosts_no_names() {
+        // Test with hosts that have no names
+        let known_hosts_response = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![
+                KnownHost {
+                    name: None,
+                    hosts: vec!["host1.example.com".to_string()],
+                    keys: vec![HostKey {
+                        key_type: "ssh-rsa".to_string(),
+                        key: "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7Host1".to_string(),
+                        comment: None,
+                        revoked: None,
+                        cert_authority: None,
+                    }],
+                },
+                KnownHost {
+                    name: None,
+                    hosts: vec!["host2.example.com".to_string()],
+                    keys: vec![HostKey {
+                        key_type: "ssh-ed25519".to_string(),
+                        key: "AAAAC3NzaC1lZDI1NTE5AAAAIHost2".to_string(),
+                        comment: None,
+                        revoked: None,
+                        cert_authority: None,
+                    }],
+                },
+            ],
+        };
+
+        // Should handle missing names gracefully
+        pretty_print_known_hosts(&known_hosts_response);
+    }
+
+    #[test]
+    fn test_pretty_print_known_hosts_long_data() {
+        // Test with very long host names, comments, and multiple hosts per entry
+        let known_hosts_response = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![
+                KnownHost {
+                    name: Some("Very Long Service Name That Should Test Column Width Calculations".to_string()),
+                    hosts: vec![
+                        "very-long-hostname-that-tests-column-width.example.com".to_string(),
+                        "another-very-long-hostname.example.com".to_string(),
+                        "third-hostname.example.com".to_string()
+                    ],
+                    keys: vec![
+                        HostKey {
+                            key_type: "ssh-rsa".to_string(),
+                            key: "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7VeryLongKeyDataThatShouldTestTheKeyColumnWidthHandling".to_string(),
+                            comment: Some("This is a very long comment that should test the comment column width handling and make sure everything aligns properly".to_string()),
+                            revoked: Some(true),
+                            cert_authority: Some(true),
+                        }
+                    ],
+                }
+            ],
+        };
+
+        // Should handle long data gracefully
+        pretty_print_known_hosts(&known_hosts_response);
+    }
+
+    #[test]
+    fn test_deserialize_known_hosts_response() {
+        // Test JSON deserialization
+        let json_data = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "name": "Test",
+                    "hosts": ["test.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7Test",
+                            "comment": "Test comment",
+                            "revoked": true,
+                            "cert-authority": false
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+
+        let result: Result<KnownHostsResponse, _> = serde_json::from_str(json_data);
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert_eq!(response.version, "1.0.0");
+        assert_eq!(response.hosts.len(), 1);
+        assert_eq!(response.hosts[0].name, Some("Test".to_string()));
+        assert_eq!(response.hosts[0].hosts, vec!["test.com"]);
+        assert_eq!(response.hosts[0].keys.len(), 1);
+        assert_eq!(response.hosts[0].keys[0].key_type, "ssh-rsa");
+        assert_eq!(
+            response.hosts[0].keys[0].key,
+            "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7Test"
+        );
+        assert_eq!(
+            response.hosts[0].keys[0].comment,
+            Some("Test comment".to_string())
+        );
+        assert_eq!(response.hosts[0].keys[0].revoked, Some(true));
+        assert_eq!(response.hosts[0].keys[0].cert_authority, Some(false));
+    }
+
+    #[test]
+    fn test_deserialize_known_hosts_response_minimal() {
+        // Test JSON deserialization with minimal required fields
+        let json_data = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["minimal.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-ed25519",
+                            "key": "AAAAC3NzaC1lZDI1NTE5AAAAIMinimal"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+
+        let result: Result<KnownHostsResponse, _> = serde_json::from_str(json_data);
+        assert!(result.is_ok());
+
+        let response = result.unwrap();
+        assert_eq!(response.version, "1.0.0");
+        assert_eq!(response.hosts.len(), 1);
+        assert_eq!(response.hosts[0].name, None);
+        assert_eq!(response.hosts[0].hosts, vec!["minimal.com"]);
+        assert_eq!(response.hosts[0].keys.len(), 1);
+        assert_eq!(response.hosts[0].keys[0].key_type, "ssh-ed25519");
+        assert_eq!(
+            response.hosts[0].keys[0].key,
+            "AAAAC3NzaC1lZDI1NTE5AAAAIMinimal"
+        );
+        assert_eq!(response.hosts[0].keys[0].comment, None);
+        assert_eq!(response.hosts[0].keys[0].revoked, None);
+        assert_eq!(response.hosts[0].keys[0].cert_authority, None);
+    }
+
+    #[test]
+    fn test_deserialize_known_hosts_response_invalid() {
+        // Test JSON deserialization with missing required fields
+        let json_data = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "name": "Invalid",
+                    "keys": [
+                        {
+                            "type": "ssh-rsa"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+
+        let result: Result<KnownHostsResponse, _> = serde_json::from_str(json_data);
+        assert!(result.is_err()); // Should fail due to missing required fields
+    }
+
+    #[test]
+    fn test_fetch_known_hosts_network_error() {
+        // Test with invalid URL to simulate network error
+        let result = fetch_known_hosts("http://invalid-url-that-does-not-exist.local");
+        assert!(result.is_err());
+    }
+}
