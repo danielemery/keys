@@ -48,7 +48,7 @@ jobs:
 
   test-rust-cli:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Setup repo
         uses: actions/checkout@v4
