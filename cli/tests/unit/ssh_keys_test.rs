@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use tempfile::TempDir;
 
 // Import the function we want to test
-use keys_cli::commands::ssh_keys::write_ssh_keys;
+use keys::commands::ssh_keys::write_ssh_keys;
 
 // Helper function to create a temp directory and file
 fn setup_temp_dir_and_file(content: Option<&str>) -> (TempDir, PathBuf) {

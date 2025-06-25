@@ -1,5 +1,5 @@
 [package]
-name = "keys-cli"
+name = "keys"
 version = "0.1.0"
 edition = "2021"
 description = "CLI client for the keys server"
