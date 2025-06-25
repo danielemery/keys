@@ -17,28 +17,31 @@ A command-line interface for interacting with the keys server.
 
 ```bash
 # Fetch SSH keys using default server from config or localhost
-keys-cli keys
+keys ssh
 
 # Fetch SSH keys with explicit server
-keys-cli --server http://localhost:8000 keys
+keys --server http://localhost:8000 ssh
 
 # Write SSH keys to authorized_keys file (only adds new keys by default)
-keys-cli keys --write ~/.ssh/authorized_keys
+keys ssh --write ~/.ssh/authorized_keys
 
 # Force overwrite authorized_keys file with server keys
-keys-cli keys --write ~/.ssh/authorized_keys --force
+keys ssh --write ~/.ssh/authorized_keys --force
+
+# Fetch PGP keys
+keys pgp
 
 # Initialize default config file
-keys-cli init
+keys init
 
 # Use a custom config file
-keys-cli --config ~/.keys-cli-config.toml keys
+keys --config ~/.keys-config.toml ssh
 
 # Display help for the whole CLI
-keys-cli --help
+keys --help
 
 # Display help for a specific subcommand
-keys-cli keys --help
+keys ssh --help
 ```
 
 ## Building
@@ -48,7 +51,7 @@ cd cli
 cargo build --release
 ```
 
-The compiled binary will be available in `target/release/keys-cli`.
+The compiled binary will be available in `target/release/keys`.
 
 ## Configuration
 
@@ -56,14 +59,14 @@ The CLI supports reading configuration from a TOML file. By default, it looks
 for configuration in:
 
 ```
-~/.config/keys-cli/config.toml  # On Linux/macOS
-%APPDATA%\keys-cli\config.toml  # On Windows
+~/.config/keys/config.toml  # On Linux/macOS
+%APPDATA%\keys\config.toml  # On Windows
 ```
 
 You can initialize a default config file using the `init` command:
 
 ```bash
-keys-cli init
+keys init
 ```
 
 The configuration file format is:
@@ -78,7 +81,7 @@ server_url = "https://keys.example.com"
 You can also specify a custom config file location:
 
 ```bash
-keys-cli --config /path/to/config.toml keys
+keys --config /path/to/config.toml ssh
 ```
 
 Command-line options take precedence over configuration file settings.
@@ -90,10 +93,10 @@ server:
 
 ```bash
 # Only add new keys from server, preserving existing keys
-keys-cli keys --write ~/.ssh/authorized_keys
+keys ssh --write ~/.ssh/authorized_keys
 
 # Replace all keys with the server's keys
-keys-cli keys --write ~/.ssh/authorized_keys --force
+keys ssh --write ~/.ssh/authorized_keys --force
 ```
 
 By default (without `--force`), the CLI will:
@@ -114,6 +117,6 @@ the server.
 To test the CLI during development, you can run:
 
 ```bash
-# Run with the keys subcommand
-cargo run -- --server http://localhost:8000 keys
+# Run with the ssh subcommand
+cargo run -- --server http://localhost:8000 ssh
 ```

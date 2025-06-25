@@ -12,7 +12,7 @@ struct Cli {
     #[arg(short, long)]
     server: Option<String>,
 
-    /// Path to config file (default: ~/.config/keys-cli/config.toml)
+    /// Path to config file (default: ~/.config/keys/config.toml)
     #[arg(short = 'c', long)]
     config: Option<String>,
 
@@ -23,7 +23,7 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Fetch or write SSH keys from the server
-    Keys {
+    Ssh {
         /// Write keys to authorized_keys file
         #[arg(short, long)]
         write: Option<String>,
@@ -34,7 +34,7 @@ enum Commands {
     },
 
     /// Fetch PGP keys from the server
-    PgpKeys {},
+    Pgp {},
 
     /// Fetch known hosts from the server
     KnownHosts {},
@@ -53,14 +53,14 @@ fn main() -> Result<()> {
     let server_url = cli.server.unwrap_or(config.server_url);
 
     match &cli.command {
-        Commands::Keys { write, force } => {
+        Commands::Ssh { write, force } => {
             if let Some(path) = write {
                 commands::write_ssh_keys(&server_url, path, *force)?;
             } else {
                 commands::fetch_ssh_keys(&server_url)?;
             }
         }
-        Commands::PgpKeys {} => {
+        Commands::Pgp {} => {
             commands::fetch_pgp_keys(&server_url)?;
         }
         Commands::KnownHosts {} => {
