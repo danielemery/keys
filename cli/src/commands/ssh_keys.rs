@@ -252,7 +252,7 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
             );
         } else {
             println!(
-                "✅ Keys are already in sync with server at {} ({} total keys)",
+                "✅ Server keys are already present locally at {} ({} total keys)",
                 path.display(),
                 num_final
             );
@@ -261,7 +261,7 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
         // Print warning about local-only keys if they exist
         if num_local_only > 0 {
             println!(
-                "{} {} local keys were not removed (use {} to remove)",
+                "{}  {} local keys were not removed (use {} to remove)",
                 "⚠️".yellow().bold(),
                 num_local_only.to_string().yellow().bold(),
                 "--force".yellow().bold()
