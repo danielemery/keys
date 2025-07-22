@@ -1,7 +1,7 @@
 [package]
 name = "keys"
-version = "0.1.0"
-edition = "2021"
+version = "0.0.0" # 0.0.0 is a placeholder, before publish it should be set to the current git tag
+edition = "2024"
 description = "CLI client for the keys server"
 
 [dependencies]

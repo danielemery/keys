@@ -4,7 +4,7 @@ use colored::Colorize;
 use reqwest::header::ACCEPT;
 use serde::Deserialize;
 
-use crate::utils::{pretty_print_table, ColumnConfig};
+use crate::utils::{ColumnConfig, pretty_print_table};
 
 #[derive(Debug, Deserialize)]
 pub struct PGPKeysResponse {
