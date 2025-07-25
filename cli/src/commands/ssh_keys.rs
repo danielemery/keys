@@ -152,9 +152,27 @@ fn format_keys_for_pipe(keys_response: &KeysResponse) -> String {
     keys_response
         .keys
         .iter()
-        .map(|key| key.key.clone())
+        .map(|key| format!("{} {}@{}", key.key, key.user, key.name))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+/// Helper function to extract just the key part from an SSH key line (without comment)
+fn extract_key_part(ssh_line: &str) -> String {
+    let parts: Vec<&str> = ssh_line.split_whitespace().collect();
+    if parts.len() >= 2 {
+        // Return "ssh-rsa AAAAB..." (type + key, no comment)
+        format!("{} {}", parts[0], parts[1])
+    } else if parts.len() == 1 {
+        parts[0].to_string()
+    } else {
+        ssh_line.trim().to_string()
+    }
+}
+
+/// Helper function to format a server key with user@host comment
+fn format_server_key(ssh_key: &SSHKey) -> String {
+    format!("{} {}@{}", ssh_key.key, ssh_key.user, ssh_key.name)
 }
 
 pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<()> {
@@ -166,7 +184,7 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
     let path = std::path::Path::new(expanded_path.as_ref());
 
     // Read existing authorized_keys file if it exists
-    let existing_keys = if path.exists() {
+    let existing_lines = if path.exists() {
         std::fs::read_to_string(path)
             .with_context(|| format!("Failed to read existing file: {}", path.display()))?
             .lines()
@@ -177,13 +195,21 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
         Vec::new()
     };
 
-    // Extract server keys
-    let server_keys: Vec<String> = keys_response.keys.iter().map(|k| k.key.clone()).collect();
+    // Extract server keys (just the key part for comparison)
+    let server_key_parts: Vec<String> = keys_response.keys.iter().map(|k| k.key.clone()).collect();
+
+    // Extract existing key parts for comparison
+    let existing_key_parts: Vec<String> = existing_lines
+        .iter()
+        .map(|line| extract_key_part(line))
+        .collect();
 
     // Find keys that are present locally but not on the server
-    let local_only_keys: Vec<&String> = existing_keys
+    let local_only_keys: Vec<&String> = existing_lines
         .iter()
-        .filter(|key| !server_keys.contains(key))
+        .enumerate()
+        .filter(|(i, _)| !server_key_parts.contains(&existing_key_parts[*i]))
+        .map(|(_, line)| line)
         .collect();
     let num_local_only = local_only_keys.len();
 
@@ -196,21 +222,51 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
         }
     }
 
+    let mut updated_keys_count = 0;
+
     // Define the file content based on the force flag
     let file_content = if force {
-        // Force mode: overwrite with server keys
-        server_keys.join("\n")
+        // Force mode: overwrite with server keys (with user@host comments)
+        keys_response
+            .keys
+            .iter()
+            .map(format_server_key)
+            .collect::<Vec<_>>()
+            .join("\n")
     } else {
-        // Safe mode: only add new keys
-        let mut combined_keys = existing_keys.clone();
+        // Safe mode: merge existing keys with server keys
+        let mut result_lines = Vec::new();
 
-        for key in &server_keys {
-            if !existing_keys.contains(key) {
-                combined_keys.push(key.clone());
+        // First, add existing keys, updating comments if the key matches a server key
+        for existing_line in &existing_lines {
+            let existing_key_part = extract_key_part(existing_line);
+
+            // Check if this key matches any server key
+            if let Some(server_key) = keys_response
+                .keys
+                .iter()
+                .find(|k| k.key == existing_key_part)
+            {
+                // Update the comment part with server info
+                let new_line = format_server_key(server_key);
+                if new_line != *existing_line {
+                    updated_keys_count += 1;
+                }
+                result_lines.push(new_line);
+            } else {
+                // Keep existing local key as-is
+                result_lines.push(existing_line.clone());
             }
         }
 
-        combined_keys.join("\n")
+        // Then, add new server keys that weren't already present
+        for server_key in &keys_response.keys {
+            if !existing_key_parts.contains(&server_key.key) {
+                result_lines.push(format_server_key(server_key));
+            }
+        }
+
+        result_lines.join("\n")
     };
 
     // Write to file
@@ -219,18 +275,18 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
 
     // Count stats
     let num_server_keys = keys_response.keys.len();
-    let num_existing = existing_keys.len();
+    let num_existing = existing_lines.len();
     let num_final = if force {
         num_server_keys
     } else {
         // In additive mode, we need to count unique keys
-        let mut combined = existing_keys.clone();
-        for key in &server_keys {
-            if !combined.contains(key) {
-                combined.push(key.clone());
+        let mut combined_key_parts = existing_key_parts.clone();
+        for server_key in &keys_response.keys {
+            if !combined_key_parts.contains(&server_key.key) {
+                combined_key_parts.push(server_key.key.clone());
             }
         }
-        combined.len()
+        combined_key_parts.len()
     };
 
     // Print a message about what happened
@@ -244,18 +300,30 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
     } else {
         let num_added = num_final - num_existing;
         if num_added > 0 {
-            println!(
+            let mut message = format!(
                 "✅ Added {} new keys to {} (now {} total keys)",
                 num_added,
                 path.display(),
                 num_final
             );
+            if updated_keys_count > 0 {
+                message.push_str(&format!(
+                    " and updated comments for {updated_keys_count} existing keys"
+                ));
+            }
+            println!("{message}");
         } else {
-            println!(
+            let mut message = format!(
                 "✅ Server keys are already present locally at {} ({} total keys)",
                 path.display(),
                 num_final
             );
+            if updated_keys_count > 0 {
+                message.push_str(&format!(
+                    " but updated comments for {updated_keys_count} keys"
+                ));
+            }
+            println!("{message}");
         }
 
         // Print warning about local-only keys if they exist
@@ -378,7 +446,10 @@ mod tests {
 
         // Verify file contents
         let content = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(content, "ssh-rsa AAAAB1\nssh-rsa AAAAB2");
+        assert_eq!(
+            content,
+            "ssh-rsa AAAAB1 user1@key1\nssh-rsa AAAAB2 user2@key2"
+        );
 
         // Verify it doesn't contain old keys
         assert!(!content.contains("AAAABX"));
@@ -449,7 +520,10 @@ mod tests {
 
         // Verify file was created with correct contents
         let content = fs::read_to_string(&file_path).unwrap();
-        assert_eq!(content, "ssh-rsa AAAAB1\nssh-rsa AAAAB2");
+        assert_eq!(
+            content,
+            "ssh-rsa AAAAB1 user1@key1\nssh-rsa AAAAB2 user2@key2"
+        );
 
         // Cleanup
         drop(temp_dir);
@@ -700,7 +774,10 @@ mod tests {
         };
 
         let output = format_keys_for_pipe(&keys_response);
-        assert_eq!(output, "ssh-rsa AAAAB1\nssh-ed25519 AAAAC1");
+        assert_eq!(
+            output,
+            "ssh-rsa AAAAB1 user1@key1\nssh-ed25519 AAAAC1 user2@key2"
+        );
     }
 
     #[test]
@@ -729,6 +806,85 @@ mod tests {
         };
 
         let output = format_keys_for_pipe(&keys_response);
-        assert_eq!(output, "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7");
+        assert_eq!(
+            output,
+            "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7 alice@laptop"
+        );
+    }
+
+    #[test]
+    fn test_write_ssh_keys_update_comments() {
+        // Setup mock server with keys that have user@host info
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "keys": [
+                {"key": "ssh-rsa AAAAB1", "user": "newuser", "name": "newname", "tags": ["dev"]},
+                {"key": "ssh-rsa AAAAB2", "user": "user2", "name": "key2", "tags": ["prod"]}
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Setup existing file with keys that have old comments
+        let existing_content = "ssh-rsa AAAAB1 olduser@oldname\nssh-rsa AAAAB3 localuser@localhost";
+        let (temp_dir, file_path) = setup_temp_dir_and_file(Some(existing_content));
+
+        // Call function with force=false (additive mode)
+        let result = write_ssh_keys(&server_url, file_path.to_str().unwrap(), false);
+        assert!(result.is_ok(), "write_ssh_keys failed: {:?}", result.err());
+
+        // Verify file contents
+        let content = fs::read_to_string(&file_path).unwrap();
+
+        // Should contain the updated comment for AAAAB1
+        assert!(content.contains("ssh-rsa AAAAB1 newuser@newname"));
+
+        // Should contain the new key AAAAB2
+        assert!(content.contains("ssh-rsa AAAAB2 user2@key2"));
+
+        // Should still contain the local-only key AAAAB3
+        assert!(content.contains("ssh-rsa AAAAB3 localuser@localhost"));
+
+        // Should NOT contain the old comment for AAAAB1
+        assert!(!content.contains("olduser@oldname"));
+
+        // Count lines - should be 3 lines total
+        let lines: Vec<&str> = content
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .collect();
+        assert_eq!(lines.len(), 3);
+
+        // Cleanup
+        drop(temp_dir);
+    }
+
+    #[test]
+    fn test_extract_key_part() {
+        // Test with comment
+        assert_eq!(
+            extract_key_part("ssh-rsa AAAAB123 user@host"),
+            "ssh-rsa AAAAB123"
+        );
+
+        // Test without comment
+        assert_eq!(extract_key_part("ssh-rsa AAAAB123"), "ssh-rsa AAAAB123");
+
+        // Test with extra whitespace
+        assert_eq!(
+            extract_key_part("  ssh-rsa AAAAB123   user@host  "),
+            "ssh-rsa AAAAB123"
+        );
+
+        // Test with multiple comment parts
+        assert_eq!(
+            extract_key_part("ssh-rsa AAAAB123 user@host some extra info"),
+            "ssh-rsa AAAAB123"
+        );
+
+        // Test edge case - only key type
+        assert_eq!(extract_key_part("ssh-rsa"), "ssh-rsa");
     }
 }
