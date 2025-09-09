@@ -9,7 +9,6 @@ A command-line interface for interacting with the keys server.
 - Safely update `authorized_keys` files without risk of losing ssh access
 - TODO: Filter keys by user or tag (exlusions or inclusions)
 - TODO: Update `known_hosts` files
-- TODO: Package for nix
 
 ## Usage
 
@@ -100,6 +99,55 @@ cargo build --release
 ```
 
 The compiled binary will be available in `target/release/keys`.
+
+## Installation with Nix
+
+If you have Nix installed, you can build and install the CLI using the flake:
+
+```bash
+# Build the CLI
+nix build
+
+# Run directly without installing
+nix run
+
+# Install to your profile
+nix profile install .
+
+# Or install from GitHub
+nix profile install github:danielemery/keys
+```
+
+### NixOS System Configuration
+
+To install the CLI system-wide on NixOS, add it as a flake input and include it
+in your system packages:
+
+```nix
+# flake.nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    keys.url = "github:danielemery/keys";
+  };
+
+  outputs = { self, nixpkgs, keys }: {
+    nixosConfigurations.your-hostname = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        {
+          environment.systemPackages = [
+            keys.packages.x86_64-linux.default
+          ];
+        }
+      ];
+    };
+  };
+}
+```
+
+The Nix flake will build the Rust binary and make it available as the `keys`
+command.
 
 ## Development
 
