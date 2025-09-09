@@ -214,12 +214,11 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
     let num_local_only = local_only_keys.len();
 
     // Create directory if it doesn't exist
-    if let Some(parent) = path.parent() {
-        if !parent.exists() {
-            std::fs::create_dir_all(parent).with_context(|| {
-                format!("Failed to create parent directory: {}", parent.display())
-            })?;
-        }
+    if let Some(parent) = path.parent()
+        && !parent.exists()
+    {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create parent directory: {}", parent.display()))?;
     }
 
     let mut updated_keys_count = 0;

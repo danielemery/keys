@@ -40,10 +40,10 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
     }
 
     // Try to load from default locations
-    if let Some(config_path) = get_default_config_path() {
-        if config_path.exists() {
-            return load_config_from_path(&config_path);
-        }
+    if let Some(config_path) = get_default_config_path()
+        && config_path.exists()
+    {
+        return load_config_from_path(&config_path);
     }
 
     // If no config file found, return default config
