@@ -13,6 +13,25 @@
       ];
       forAllSystems = f: genAttrs supportedSystems (system: f system);
     in {
+      packages = forAllSystems (system:
+        let pkgs = import nixpkgs { inherit system; };
+        in {
+          default = pkgs.rustPlatform.buildRustPackage {
+            pname = "keys";
+            version = "0.0.0";
+            src = ./cli;
+            cargoLock.lockFile = ./cli/Cargo.lock;
+            
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+            ];
+            
+            buildInputs = with pkgs; [
+              openssl
+            ];
+          };
+        });
+
       devShells = forAllSystems (system:
         let pkgs = import nixpkgs { inherit system; };
         in {
@@ -21,6 +40,8 @@
             buildInputs = with pkgs; [
               deno
               doppler
+              rustc
+              cargo
             ];
           };
         });
