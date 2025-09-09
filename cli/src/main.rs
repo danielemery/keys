@@ -35,7 +35,11 @@ enum Commands {
     Pgp {},
 
     /// Fetch known hosts from the server
-    KnownHosts {},
+    KnownHosts {
+        /// Write known hosts to file (replaces entire file)
+        #[arg(short, long)]
+        write: Option<String>,
+    },
 
     /// Initialize a default config file
     Init {},
@@ -61,8 +65,12 @@ fn main() -> Result<()> {
         Commands::Pgp {} => {
             commands::pgp_keys::fetch_pgp_keys(&server_url)?;
         }
-        Commands::KnownHosts {} => {
-            commands::known_hosts::fetch_known_hosts(&server_url)?;
+        Commands::KnownHosts { write } => {
+            if let Some(path) = write {
+                commands::known_hosts::write_known_hosts(&server_url, path)?;
+            } else {
+                commands::known_hosts::fetch_known_hosts(&server_url)?;
+            }
         }
         Commands::Init {} => {
             // Create a default config file

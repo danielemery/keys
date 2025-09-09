@@ -146,7 +146,17 @@ pub fn pretty_print_known_hosts(response: &KnownHostsResponse) {
     );
 }
 
-pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
+/// Private function to fetch known hosts from the server
+///
+/// This function handles the HTTP request to the known hosts server,
+/// validates the response, and parses the JSON into a KnownHostsResponse.
+///
+/// # Arguments
+/// * `server_url` - The base URL of the keys server
+///
+/// # Returns
+/// * `Result<KnownHostsResponse>` - The parsed known hosts response or an error
+fn fetch_known_hosts_from_server(server_url: &str) -> Result<KnownHostsResponse> {
     let url = format!("{server_url}/known_hosts");
 
     let client = reqwest::blocking::Client::new();
@@ -166,8 +176,13 @@ pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
         ));
     }
 
-    let known_hosts_response: KnownHostsResponse =
-        response.json().context("Failed to parse JSON response")?;
+    response
+        .json::<KnownHostsResponse>()
+        .context("Failed to parse JSON response")
+}
+
+pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
+    let known_hosts_response = fetch_known_hosts_from_server(server_url)?;
 
     // Check if the output is being piped (not connected to a terminal)
     // Use raw/minimal output when piped to another command
@@ -214,6 +229,94 @@ pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
 
     // Use the pretty print function for interactive terminal output
     pretty_print_known_hosts(&known_hosts_response);
+
+    Ok(())
+}
+
+/// Helper function to format a host entry in known_hosts format
+fn format_known_hosts_line(host: &KnownHost, key: &HostKey) -> String {
+    let hosts_str = host.hosts.join(",");
+    let key_type = &key.key_type;
+    let key_value = &key.key;
+
+    // Add flags if present
+    let mut flags = Vec::new();
+    if key.revoked.unwrap_or(false) {
+        flags.push("@revoked");
+    }
+    if key.cert_authority.unwrap_or(false) {
+        flags.push("@cert-authority");
+    }
+
+    // Format comment if present
+    let comment_str = if let Some(comment) = &key.comment {
+        format!(" # {comment}")
+    } else {
+        String::new()
+    };
+
+    // Output in OpenSSH known_hosts format with flags and optional comment
+    if flags.is_empty() {
+        format!("{hosts_str} {key_type} {key_value}{comment_str}")
+    } else {
+        format!(
+            "{} {} {} {}{}",
+            flags.join(" "),
+            hosts_str,
+            key_type,
+            key_value,
+            comment_str
+        )
+    }
+}
+
+pub fn write_known_hosts(server_url: &str, file_path: &str) -> Result<()> {
+    // Fetch known hosts from the server
+    let known_hosts_response = fetch_known_hosts_from_server(server_url)?;
+
+    // Expand ~ to home directory if present
+    let expanded_path = shellexpand::tilde(file_path);
+    let path = std::path::Path::new(expanded_path.as_ref());
+
+    // Create directory if it doesn't exist
+    if let Some(parent) = path.parent()
+        && !parent.exists()
+    {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create parent directory: {}", parent.display()))?;
+    }
+
+    // Generate the file content (always replace completely)
+    let mut lines = Vec::new();
+    for host in &known_hosts_response.hosts {
+        for key in &host.keys {
+            lines.push(format_known_hosts_line(host, key));
+        }
+    }
+
+    let file_content = lines.join("\n");
+    if !file_content.is_empty() {
+        let file_content = format!("{}\n", file_content);
+        std::fs::write(path, file_content)
+            .with_context(|| format!("Failed to write to file: {}", path.display()))?;
+    } else {
+        // Write empty file if no hosts
+        std::fs::write(path, "")
+            .with_context(|| format!("Failed to write to file: {}", path.display()))?;
+    }
+
+    // Count the total number of entries written
+    let total_entries: usize = known_hosts_response
+        .hosts
+        .iter()
+        .map(|h| h.keys.len())
+        .sum();
+
+    println!(
+        "✅ Wrote {} known host entries to {}",
+        total_entries,
+        path.display()
+    );
 
     Ok(())
 }
