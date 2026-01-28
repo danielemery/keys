@@ -21,5 +21,10 @@
     "8000": {
       "label": "Keys API"
     }
-  }
+  },
+  // Persist claude credentials between dev container rebuilds (and between different containers)
+  "mounts": ["source=claude-data,target=/home/node/.claude-shared,type=volume"],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // Since the claude credentials volume is shared between multiple containers, we need to ensure each container is using the same user ID
+  "updateRemoteUserUID": true
 }
