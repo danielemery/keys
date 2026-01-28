@@ -49,7 +49,7 @@ _Replaces the `known_hosts` file with the hosts in your keys instance_
 # Consider backup first
 cp ~/.ssh/known_hosts ~/.ssh/known_hosts.`date '+%Y-%m-%d__%H_%M_%S'`.backup
 # Override file with the hosts from the keys instance
-curl http://localhost:8000/known_hosts > ~/.ssh/known_hosts
+curl https://keys.demery.net/known_hosts > ~/.ssh/known_hosts
 ```
 
 ## JSON API
