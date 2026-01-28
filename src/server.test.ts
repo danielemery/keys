@@ -4,12 +4,8 @@ import { serveKeys } from "./routes/keys/serve-keys.ts";
 import { ServerDependencies } from "./shared_types/dependencies.ts";
 import { emptyDependencies } from "./common/test_helpers.ts";
 
-import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
-import {
-  assertSpyCall,
-  assertSpyCalls,
-  spy,
-} from "https://deno.land/std@0.204.0/testing/mock.ts";
+import { assertEquals } from "@std/assert";
+import { assertSpyCall, assertSpyCalls, spy } from "@std/testing/mock";
 
 const TEST_URL = "http://localhost";
 

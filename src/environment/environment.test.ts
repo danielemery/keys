@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  assertThrows,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assertEquals, assertThrows } from "@std/assert";
 import { parseEnvironmentVariables } from "../environment/environment.ts";
 import { ZodError } from "../../deps.ts";
 
