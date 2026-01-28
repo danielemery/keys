@@ -6,7 +6,7 @@ import {
   servePGPKeyList,
 } from "./serve_pgp.ts";
 
-import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
+import { assertEquals } from "@std/assert";
 
 Deno.test("servePGPKeyList (plain): must return the list of key names", async () => {
   const pgpKeys = [

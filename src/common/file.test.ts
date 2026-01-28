@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  assertRejects,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assertEquals, assertRejects } from "@std/assert";
 import { loadFileContents } from "../common/file.ts";
 
 Deno.test("loadFileContents: must return file contents", async () => {

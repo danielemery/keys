@@ -1,7 +1,4 @@
-import {
-  assertEquals,
-  assertRejects,
-} from "https://deno.land/std@0.117.0/testing/asserts.ts";
+import { assertEquals, assertRejects } from "@std/assert";
 import loadConfig from "./load_config.ts";
 import { ZodError } from "../../deps.ts";
 

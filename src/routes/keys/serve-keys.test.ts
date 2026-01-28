@@ -1,9 +1,5 @@
-import { assertEquals } from "https://deno.land/std@0.204.0/assert/mod.ts";
-import {
-  assertSpyCall,
-  assertSpyCalls,
-  spy,
-} from "https://deno.land/std@0.204.0/testing/mock.ts";
+import { assertEquals } from "@std/assert";
+import { assertSpyCall, assertSpyCalls, spy } from "@std/testing/mock";
 import { serveKeys } from "./serve-keys.ts";
 import { PublicSSHKey } from "../../config/load_config.ts";
 import { emptyDependencies } from "../../common/test_helpers.ts";

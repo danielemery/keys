@@ -1,4 +1,4 @@
-import { parse } from "jsr:@std/yaml";
+import { parse } from "@std/yaml";
 import { z } from "../../deps.ts";
 import { loadFileContents } from "../common/file.ts";
 
