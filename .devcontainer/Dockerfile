@@ -1,5 +1,5 @@
 # Use the official Deno image as the source to copy the Deno executable from.
-FROM denoland/deno:bin-2.5.7 AS deno
+FROM denoland/deno:bin-2.6.6 AS deno
 
 # Use the official TypeScript Node image as a base image.
 # We don't actually use it for much since deno takes care of things, but
