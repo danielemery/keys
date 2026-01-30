@@ -787,4 +787,491 @@ mod tests {
         let result = fetch_known_hosts("http://invalid-url-that-does-not-exist.local");
         assert!(result.is_err());
     }
+
+    // ==================== format_known_hosts_line tests ====================
+
+    #[test]
+    fn test_format_known_hosts_line_basic() {
+        let host = KnownHost {
+            name: Some("GitHub".to_string()),
+            hosts: vec!["github.com".to_string()],
+            keys: vec![HostKey {
+                key_type: "ssh-rsa".to_string(),
+                key: "AAAAB3NzaC1yc2EAAAADAQABAAAB".to_string(),
+                comment: None,
+                revoked: None,
+                cert_authority: None,
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        assert_eq!(result, "github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB");
+    }
+
+    #[test]
+    fn test_format_known_hosts_line_multiple_hosts() {
+        let host = KnownHost {
+            name: Some("GitHub".to_string()),
+            hosts: vec![
+                "github.com".to_string(),
+                "*.github.com".to_string(),
+                "192.30.255.112".to_string(),
+            ],
+            keys: vec![HostKey {
+                key_type: "ssh-ed25519".to_string(),
+                key: "AAAAC3NzaC1lZDI1NTE5".to_string(),
+                comment: None,
+                revoked: None,
+                cert_authority: None,
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        assert_eq!(
+            result,
+            "github.com,*.github.com,192.30.255.112 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5"
+        );
+    }
+
+    #[test]
+    fn test_format_known_hosts_line_with_comment() {
+        let host = KnownHost {
+            name: Some("Test".to_string()),
+            hosts: vec!["example.com".to_string()],
+            keys: vec![HostKey {
+                key_type: "ssh-rsa".to_string(),
+                key: "AAAAB3NzaC1yc2ETEST".to_string(),
+                comment: Some("Example RSA key".to_string()),
+                revoked: None,
+                cert_authority: None,
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        assert_eq!(
+            result,
+            "example.com ssh-rsa AAAAB3NzaC1yc2ETEST # Example RSA key"
+        );
+    }
+
+    #[test]
+    fn test_format_known_hosts_line_with_revoked_flag() {
+        let host = KnownHost {
+            name: None,
+            hosts: vec!["revoked.example.com".to_string()],
+            keys: vec![HostKey {
+                key_type: "ssh-rsa".to_string(),
+                key: "AAAAB3NzaC1yc2EREVOKED".to_string(),
+                comment: None,
+                revoked: Some(true),
+                cert_authority: None,
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        assert_eq!(
+            result,
+            "@revoked revoked.example.com ssh-rsa AAAAB3NzaC1yc2EREVOKED"
+        );
+    }
+
+    #[test]
+    fn test_format_known_hosts_line_with_cert_authority_flag() {
+        let host = KnownHost {
+            name: None,
+            hosts: vec!["ca.example.com".to_string()],
+            keys: vec![HostKey {
+                key_type: "ssh-ed25519".to_string(),
+                key: "AAAAC3NzaC1lZDI1NTE5CA".to_string(),
+                comment: None,
+                revoked: None,
+                cert_authority: Some(true),
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        assert_eq!(
+            result,
+            "@cert-authority ca.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5CA"
+        );
+    }
+
+    #[test]
+    fn test_format_known_hosts_line_with_both_flags() {
+        let host = KnownHost {
+            name: None,
+            hosts: vec!["both.example.com".to_string()],
+            keys: vec![HostKey {
+                key_type: "ssh-rsa".to_string(),
+                key: "AAAAB3NzaC1yc2EBOTH".to_string(),
+                comment: None,
+                revoked: Some(true),
+                cert_authority: Some(true),
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        assert_eq!(
+            result,
+            "@revoked @cert-authority both.example.com ssh-rsa AAAAB3NzaC1yc2EBOTH"
+        );
+    }
+
+    #[test]
+    fn test_format_known_hosts_line_with_flags_and_comment() {
+        let host = KnownHost {
+            name: Some("Full example".to_string()),
+            hosts: vec!["full.example.com".to_string(), "192.168.1.1".to_string()],
+            keys: vec![HostKey {
+                key_type: "ssh-rsa".to_string(),
+                key: "AAAAB3NzaC1yc2EFULL".to_string(),
+                comment: Some("Full example with all options".to_string()),
+                revoked: Some(true),
+                cert_authority: Some(true),
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        assert_eq!(
+            result,
+            "@revoked @cert-authority full.example.com,192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EFULL # Full example with all options"
+        );
+    }
+
+    #[test]
+    fn test_format_known_hosts_line_flags_false_not_included() {
+        let host = KnownHost {
+            name: None,
+            hosts: vec!["noflags.example.com".to_string()],
+            keys: vec![HostKey {
+                key_type: "ssh-rsa".to_string(),
+                key: "AAAAB3NzaC1yc2ENOFLAGS".to_string(),
+                comment: None,
+                revoked: Some(false),
+                cert_authority: Some(false),
+            }],
+        };
+
+        let result = format_known_hosts_line(&host, &host.keys[0]);
+        // When flags are explicitly false, they should not be included
+        assert_eq!(result, "noflags.example.com ssh-rsa AAAAB3NzaC1yc2ENOFLAGS");
+        assert!(!result.contains("@revoked"));
+        assert!(!result.contains("@cert-authority"));
+    }
+
+    // ==================== write_known_hosts tests ====================
+
+    #[test]
+    fn test_write_known_hosts_creates_file() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        // Setup mock server
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "name": "GitHub",
+                    "hosts": ["github.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EAAAADAQABAAABgQC7",
+                            "comment": "GitHub RSA key"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Create temp directory
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        // Call function
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(
+            result.is_ok(),
+            "write_known_hosts failed: {:?}",
+            result.err()
+        );
+
+        // Verify file was created
+        assert!(file_path.exists());
+
+        // Verify file contents
+        let contents = fs::read_to_string(&file_path).unwrap();
+        assert!(contents.contains("github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7"));
+        assert!(contents.contains("# GitHub RSA key"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_creates_parent_directories() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        // Setup mock server
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-ed25519",
+                            "key": "AAAAC3NzaC1lZDI1NTE5"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // Create temp directory with nested path
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir
+            .path()
+            .join("nested")
+            .join("dir")
+            .join("known_hosts");
+
+        // Parent directories don't exist yet
+        assert!(!file_path.parent().unwrap().exists());
+
+        // Call function
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(
+            result.is_ok(),
+            "write_known_hosts failed: {:?}",
+            result.err()
+        );
+
+        // Verify file and parent directories were created
+        assert!(file_path.exists());
+        let contents = fs::read_to_string(&file_path).unwrap();
+        assert!(contents.contains("example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_multiple_hosts_and_keys() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        // Setup mock server with multiple hosts and keys
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "name": "GitHub",
+                    "hosts": ["github.com", "*.github.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EGitHub1"
+                        },
+                        {
+                            "type": "ssh-ed25519",
+                            "key": "AAAAC3NzaC1lZDI1NTE5GitHub3"
+                        }
+                    ]
+                },
+                {
+                    "name": "GitLab",
+                    "hosts": ["gitlab.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAAB3NzaC1yc2EGitLab1"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(result.is_ok());
+
+        let contents = fs::read_to_string(&file_path).unwrap();
+        let lines: Vec<&str> = contents.lines().collect();
+
+        // Should have 3 lines (2 keys for GitHub, 1 for GitLab)
+        assert_eq!(lines.len(), 3);
+        assert!(contents.contains("github.com,*.github.com ssh-rsa AAAAB3NzaC1yc2EGitHub1"));
+        assert!(
+            contents.contains("github.com,*.github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5GitHub3")
+        );
+        assert!(contents.contains("gitlab.com ssh-rsa AAAAB3NzaC1yc2EGitLab1"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_with_flags() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["revoked.example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "REVOKED_KEY",
+                            "revoked": true
+                        }
+                    ]
+                },
+                {
+                    "hosts": ["ca.example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "CA_KEY",
+                            "cert-authority": true
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(result.is_ok());
+
+        let contents = fs::read_to_string(&file_path).unwrap();
+        assert!(contents.contains("@revoked revoked.example.com ssh-rsa REVOKED_KEY"));
+        assert!(contents.contains("@cert-authority ca.example.com ssh-rsa CA_KEY"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_empty_response() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": []
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(result.is_ok());
+
+        // File should exist but be empty
+        assert!(file_path.exists());
+        let contents = fs::read_to_string(&file_path).unwrap();
+        assert!(contents.is_empty());
+    }
+
+    #[test]
+    fn test_write_known_hosts_overwrites_existing_file() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["new.example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "NEW_KEY"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        // Create existing file with different content
+        fs::write(&file_path, "old.example.com ssh-rsa OLD_KEY\n").unwrap();
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(result.is_ok());
+
+        let contents = fs::read_to_string(&file_path).unwrap();
+        // Old content should be gone
+        assert!(!contents.contains("old.example.com"));
+        assert!(!contents.contains("OLD_KEY"));
+        // New content should be present
+        assert!(contents.contains("new.example.com ssh-rsa NEW_KEY"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_server_error() {
+        use tempfile::tempdir;
+
+        let (server_url, _server) =
+            setup_mock_server_with_error(500, r#"{"error": "Internal server error"}"#);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(result.is_err());
+
+        // File should not be created on error
+        assert!(!file_path.exists());
+    }
+
+    #[test]
+    fn test_write_known_hosts_file_ends_with_newline() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "TEST_KEY"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        assert!(result.is_ok());
+
+        let contents = fs::read_to_string(&file_path).unwrap();
+        // File should end with a newline (POSIX standard)
+        assert!(contents.ends_with('\n'));
+    }
 }
