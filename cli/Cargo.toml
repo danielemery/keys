@@ -19,3 +19,5 @@ shellexpand = "3.1.0"
 [dev-dependencies]
 mockito = "1.2.0"
 tempfile = "3.8.0"
+assert_cmd = "2.0"
+predicates = "3.0"
