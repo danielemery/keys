@@ -96,8 +96,6 @@ pub fn ensure_default_config_exists() -> Result<PathBuf> {
                     config_path.display()
                 )
             })?;
-
-            println!("Created default config file at: {}", config_path.display());
         }
         return Ok(config_path);
     }

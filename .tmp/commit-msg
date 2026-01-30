@@ -1,0 +1,8 @@
+Fixed duplicate config path output in keys init command
+
+The config file location was being printed twice: once inside
+ensure_default_config_exists() and again in the init command handler.
+Removed the print from the helper function to let the caller control
+the output.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
