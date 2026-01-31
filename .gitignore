@@ -4,3 +4,4 @@ coverage.lcov
 .claude
 .tmp/
 cli/lcov.info
+.tmp
