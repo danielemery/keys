@@ -418,11 +418,13 @@ mod tests {
 
     #[test]
     fn test_init_creates_config() {
-        // Note: This test creates a real config file at the default location
-        // We can't easily mock ProjectDirs, so we just verify it doesn't crash
-        // and produces expected output
+        let temp_dir = TempDir::new().unwrap();
+
+        // Set HOME to a writable temp directory so the config directory can be
+        // created in sandboxed environments (e.g. Nix builds).
         get_cmd()
             .arg("init")
+            .env("HOME", temp_dir.path())
             .assert()
             .success()
             .stdout(predicate::str::contains("config"));
