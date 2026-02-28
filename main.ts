@@ -4,7 +4,7 @@ import {
   parseParameters,
 } from "./src/routes/keys/filter.ts";
 import { parseEnvironmentVariables } from "./src/environment/environment.ts";
-import { Sentry } from "./deps.ts";
+import * as Sentry from "@sentry/deno";
 import loadConfig from "./src/config/load_config.ts";
 import {
   getPGPTarget,
