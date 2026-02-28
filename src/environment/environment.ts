@@ -1,7 +1,7 @@
-import { z } from "../../deps.ts";
+import { z } from "zod";
 
 const environmentSchema = z.object({
-  PORT: z.string().regex(/^\d+$/).transform(Number).default("8000"),
+  PORT: z.string().regex(/^\d+$/).transform(Number).prefault("8000"),
   DOPPLER_ENVIRONMENT: z.string(),
   SENTRY_DSN: z.string().optional(),
   KEYS_VERSION: z.string(),

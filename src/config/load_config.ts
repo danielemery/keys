@@ -1,5 +1,5 @@
 import { parse } from "@std/yaml";
-import { z } from "../../deps.ts";
+import { z } from "zod";
 import { loadFileContents } from "../common/file.ts";
 
 export default async function loadConfig(path: string) {

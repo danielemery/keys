@@ -1,6 +1,6 @@
 import { assertEquals, assertRejects } from "@std/assert";
 import loadConfig from "./load_config.ts";
-import { ZodError } from "../../deps.ts";
+import { ZodError } from "zod";
 
 Deno.test("loadConfig: must throw error if file is not found", async () => {
   await assertRejects(
