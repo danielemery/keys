@@ -17,7 +17,9 @@
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/streams@^1.0.17": "1.0.17",
     "jsr:@std/testing@^1.0.17": "1.0.17",
-    "jsr:@std/yaml@^1.0.12": "1.0.12"
+    "jsr:@std/yaml@^1.0.12": "1.0.12",
+    "npm:@sentry/deno@*": "10.40.0",
+    "npm:@sentry/deno@^10.40.0": "10.40.0"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -91,6 +93,21 @@
     },
     "@std/yaml@1.0.12": {
       "integrity": "7deabca4545bcedd07c5f69ea53acea71b8b4c67562f224e17b90d75944cb20c"
+    }
+  },
+  "npm": {
+    "@opentelemetry/api@1.9.0": {
+      "integrity": "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="
+    },
+    "@sentry/core@10.40.0": {
+      "integrity": "sha512-/wrcHPp9Avmgl6WBimPjS4gj810a1wU5oX9fF1bzJfeIIbF3jTsAbv0oMbgDp0cSDnkwv2+NvcPnn3+c5J6pBA=="
+    },
+    "@sentry/deno@10.40.0": {
+      "integrity": "sha512-H662hFg1kyh2DYuIIQGiHEshPyFezVVEQmGmkz5mRyVCRlufAYHdwD4u0wESfR6ctM1riZ1ibXNcCsmqC7gUew==",
+      "dependencies": [
+        "@opentelemetry/api",
+        "@sentry/core"
+      ]
     }
   },
   "remote": {
