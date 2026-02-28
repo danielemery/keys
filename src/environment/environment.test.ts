@@ -1,6 +1,6 @@
 import { assertEquals, assertThrows } from "@std/assert";
 import { parseEnvironmentVariables } from "../environment/environment.ts";
-import { ZodError } from "../../deps.ts";
+import { ZodError } from "zod";
 
 const baseVariables = {
   DOPPLER_ENVIRONMENT: "unit_tests",

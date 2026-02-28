@@ -1,6 +1,6 @@
-import { assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals, assertRejects } from "@std/assert";
 import loadConfig from "./load_config.ts";
-import { ZodError } from "../../deps.ts";
+import { ZodError } from "zod";
 
 Deno.test("loadConfig: must throw error if file is not found", async () => {
   await assertRejects(
@@ -23,50 +23,48 @@ Deno.test("loadConfig: must throw syntax error if file is not valid yaml", async
 });
 
 Deno.test("loadConfig: must throw zod error if ssh keys are not valid", async () => {
-  await assertRejects(
+  const err1 = await assertRejects(
     async () => {
       await loadConfig("./fixtures/missing-key.yaml");
     },
     ZodError,
-    `"code": "invalid_type"`,
   );
+  assert(err1.issues.some((i) => i.code === "invalid_type"));
 
-  await assertRejects(
+  const err2 = await assertRejects(
     async () => {
       await loadConfig("./fixtures/missing-field.yaml");
     },
     ZodError,
-    `{
-    "code": "invalid_type",
-    "expected": "string",
-    "received": "undefined",
-    "path": [
-      "ssh-keys",
-      0,
-      "key"
-    ],
-    "message": "Required"
-  }`,
+  );
+  const keyIssue = err2.issues.find((i) =>
+    i.path[0] === "ssh-keys" && i.path[1] === 0 && i.path[2] === "key"
+  );
+  assert(keyIssue);
+  assertEquals(keyIssue.code, "invalid_type");
+  assertEquals(keyIssue.path, ["ssh-keys", 0, "key"]);
+  assertEquals(
+    keyIssue.message,
+    "Invalid input: expected string, received undefined",
   );
 });
 
 Deno.test("loadConfig: must throw zod error if pgp keys are not valid", async () => {
-  await assertRejects(
+  const err = await assertRejects(
     async () => {
       await loadConfig("./fixtures/missing-pgp-key.yaml");
     },
     ZodError,
-    `{
-    "code": "invalid_type",
-    "expected": "string",
-    "received": "undefined",
-    "path": [
-      "pgp-keys",
-      1,
-      "key"
-    ],
-    "message": "Required"
-  }`,
+  );
+  const keyIssue = err.issues.find((i) =>
+    i.path[0] === "pgp-keys" && i.path[1] === 1 && i.path[2] === "key"
+  );
+  assert(keyIssue);
+  assertEquals(keyIssue.code, "invalid_type");
+  assertEquals(keyIssue.path, ["pgp-keys", 1, "key"]);
+  assertEquals(
+    keyIssue.message,
+    "Invalid input: expected string, received undefined",
   );
 });
 
@@ -124,39 +122,33 @@ fake2
 });
 
 Deno.test("loadConfig: must throw zod error if known hosts are not valid", async () => {
-  await assertRejects(
+  const err = await assertRejects(
     async () => {
       await loadConfig("./fixtures/invalid-known-hosts.yaml");
     },
     ZodError,
-    `{
-    "code": "invalid_type",
-    "expected": "array",
-    "received": "string",
-    "path": [
-      "known-hosts",
-      0,
-      "hosts"
-    ],
-    "message": "Expected array, received string"
-  }`,
   );
-  await assertRejects(
-    async () => {
-      await loadConfig("./fixtures/invalid-known-hosts.yaml");
-    },
-    ZodError,
-    `{
-    "code": "invalid_type",
-    "expected": "array",
-    "received": "undefined",
-    "path": [
-      "known-hosts",
-      0,
-      "keys"
-    ],
-    "message": "Required"
-  }`,
+
+  const hostsIssue = err.issues.find((i) =>
+    i.path[0] === "known-hosts" && i.path[1] === 0 && i.path[2] === "hosts"
+  );
+  assert(hostsIssue);
+  assertEquals(hostsIssue.code, "invalid_type");
+  assertEquals(hostsIssue.path, ["known-hosts", 0, "hosts"]);
+  assertEquals(
+    hostsIssue.message,
+    "Invalid input: expected array, received string",
+  );
+
+  const keysIssue = err.issues.find((i) =>
+    i.path[0] === "known-hosts" && i.path[1] === 0 && i.path[2] === "keys"
+  );
+  assert(keysIssue);
+  assertEquals(keysIssue.code, "invalid_type");
+  assertEquals(keysIssue.path, ["known-hosts", 0, "keys"]);
+  assertEquals(
+    keysIssue.message,
+    "Invalid input: expected array, received undefined",
   );
 });
 
