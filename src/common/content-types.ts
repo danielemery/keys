@@ -1,4 +1,4 @@
-import { Accepts } from "../../deps.ts";
+import { accepts } from "@std/http/negotiation";
 
 const supportedContentTypes = [
   "text/plain",
@@ -17,18 +17,12 @@ export function isValidContentType(
 export function getContentType(
   acceptHeaderValue: Headers,
 ): ContentType {
-  const accept = new Accepts(acceptHeaderValue);
+  const contentType = accepts(
+    { headers: acceptHeaderValue },
+    ...supportedContentTypes,
+  );
 
-  const contentType = accept.types(supportedContentTypes.map((type) => type));
-
-  if (Array.isArray(contentType)) {
-    console.warn(
-      'Multiple content types returned, this should not be possible, defaulting to "text/plain"',
-    );
-    return "text/plain";
-  }
-
-  if ((typeof contentType === "string") && isValidContentType(contentType)) {
+  if (contentType && isValidContentType(contentType)) {
     return contentType;
   }
 
