@@ -1,0 +1,9 @@
+{
+  "features": {
+    "ghcr.io/itsmechlark/features/doppler:2": {
+      "version": "2.6.0",
+      "resolved": "ghcr.io/itsmechlark/features/doppler@sha256:6ebeec781000839e1b02255feeb5f7c3bbfad2e1c8b081edfbb5f17166546d0d",
+      "integrity": "sha256:6ebeec781000839e1b02255feeb5f7c3bbfad2e1c8b081edfbb5f17166546d0d"
+    }
+  }
+}
