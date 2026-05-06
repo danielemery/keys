@@ -24,7 +24,7 @@
   },
   // Persist claude credentials between dev container rebuilds (and between different containers)
   "mounts": ["source=claude-data,target=/home/node/.claude-shared,type=volume"],
-  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postCreateCommand": "curl -fsSL https://gist.githubusercontent.com/danielemery/377d2e7f547433133104b4598feef406/raw/post-create.sh | bash",
   // Since the claude credentials volume is shared between multiple containers, we need to ensure each container is using the same user ID
   "updateRemoteUserUID": true
 }
