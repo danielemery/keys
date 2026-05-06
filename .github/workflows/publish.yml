@@ -6,6 +6,7 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+*"
 
 permissions:
+  contents: write
   packages: write
 
 env:
@@ -79,3 +80,64 @@ jobs:
           chart: ./helm
           version: ${{ steps.version.outputs.full }}
           appVersion: ${{ steps.version.outputs.full }}
+
+  rust-cli-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: nowsprinting/check-version-format-action@v3
+        id: version
+        with:
+          prefix: "v"
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build Rust CLI
+        working-directory: ./cli
+        run: cargo build --release
+
+      - name: Upload Rust CLI binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: keys-cli-${{ steps.version.outputs.full }}
+          path: cli/target/release/keys
+          retention-days: 30
+
+  github-release:
+    needs:
+      - docker-publish
+      - helm-publish
+      - rust-cli-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: nowsprinting/check-version-format-action@v3
+        id: version
+        with:
+          prefix: "v"
+
+      - name: Download Rust CLI binary
+        uses: actions/download-artifact@v4
+        with:
+          name: keys-cli-${{ steps.version.outputs.full }}
+          path: ./artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.full }}
+          name: Release ${{ steps.version.outputs.full }}
+          generate_release_notes: true
+          files: |
+            ./artifacts/keys
