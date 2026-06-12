@@ -27,6 +27,14 @@ impl Default for Config {
 
 /// Load configuration from file or return default if not found
 pub fn load_config(config_path: Option<&str>) -> Result<Config> {
+    load_config_from(config_path, get_default_config_path())
+}
+
+/// Load configuration, resolving against an explicitly provided default path.
+///
+/// Split out from [`load_config`] so tests can inject a default path instead of
+/// depending on the real user config directory.
+fn load_config_from(config_path: Option<&str>, default_path: Option<PathBuf>) -> Result<Config> {
     // Try to use the provided config path if specified
     if let Some(path) = config_path {
         let config_file = Path::new(path);
@@ -39,11 +47,11 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
         }
     }
 
-    // Try to load from default locations
-    if let Some(config_path) = get_default_config_path()
-        && config_path.exists()
+    // Try to load from the default location
+    if let Some(default_path) = default_path
+        && default_path.exists()
     {
-        return load_config_from_path(&config_path);
+        return load_config_from_path(&default_path);
     }
 
     // If no config file found, return default config
@@ -75,7 +83,15 @@ fn load_config_from_path(path: &Path) -> Result<Config> {
 
 /// Creates a default config file at the default location if it doesn't exist
 pub fn ensure_default_config_exists() -> Result<PathBuf> {
-    if let Some(config_path) = get_default_config_path() {
+    ensure_config_exists_at(get_default_config_path())
+}
+
+/// Creates a default config file at the given path if it doesn't exist.
+///
+/// Split out from [`ensure_default_config_exists`] so tests can target a temp
+/// path instead of writing to the real user config directory.
+fn ensure_config_exists_at(config_path: Option<PathBuf>) -> Result<PathBuf> {
+    if let Some(config_path) = config_path {
         if !config_path.exists() {
             // Create parent directory if it doesn't exist
             if let Some(parent) = config_path.parent() {
@@ -178,14 +194,45 @@ server_url = "unclosed string
     }
 
     #[test]
-    fn test_load_config_no_path_provided() {
-        // Test loading config without providing a path
-        // This should return default config since no default config file exists in test environment
-        let result = load_config(None);
-        assert!(result.is_ok());
+    fn test_load_config_no_path_provided_no_default_file() {
+        // No explicit path, and the default path points at a file that doesn't
+        // exist: should fall back to the default config. A temp path keeps the
+        // test hermetic rather than depending on the real user config dir.
+        let temp_dir = TempDir::new().unwrap();
+        let missing_default = temp_dir.path().join("config.toml");
 
-        let config = result.unwrap();
-        assert_eq!(config.server_url, "http://localhost:8000");
+        let result = load_config_from(None, Some(missing_default));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().server_url, "http://localhost:8000");
+    }
+
+    #[test]
+    fn test_load_config_no_path_provided_no_default_path() {
+        // No explicit path and no resolvable default path at all should also
+        // fall back to the default config.
+        let result = load_config_from(None, None);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().server_url, "http://localhost:8000");
+    }
+
+    #[test]
+    fn test_load_config_no_path_provided_reads_default_file() {
+        // When the default path points at an existing file, its contents are
+        // loaded.
+        let temp_dir = TempDir::new().unwrap();
+        let default_path = temp_dir.path().join("config.toml");
+        fs::write(
+            &default_path,
+            "server_url = \"https://from-default.example.com\"",
+        )
+        .unwrap();
+
+        let result = load_config_from(None, Some(default_path));
+        assert!(result.is_ok());
+        assert_eq!(
+            result.unwrap().server_url,
+            "https://from-default.example.com"
+        );
     }
 
     #[test]
@@ -224,35 +271,48 @@ server_url = "https://test.example.com"
     }
 
     #[test]
-    fn test_ensure_default_config_exists() {
-        // Create a temporary directory to simulate a config directory
+    fn test_ensure_config_exists_at_creates_file() {
+        // Target a path inside a temp dir (including a missing parent dir) so
+        // the test never touches the real user config directory.
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("keys").join("config.toml");
-
-        // Mock the get_default_config_path function by testing ensure_default_config_exists
-        // in an environment where we control the path
-        // Since we can't easily mock the function, we'll test the file creation logic indirectly
-
-        // Ensure parent directory doesn't exist
         assert!(!config_path.exists());
 
-        // Test that the function would work - we can't easily test this without mocking
-        // but we can at least ensure it doesn't panic in normal circumstances
-        let result = ensure_default_config_exists();
-        // The result depends on whether ProjectDirs can determine a config directory
-        // In some test environments this might fail, which is acceptable
-        match result {
-            Ok(path) => {
-                // If successful, the path should exist and contain expected content
-                assert!(path.exists());
-                let content = fs::read_to_string(&path).unwrap();
-                assert!(content.contains("server_url"));
-                assert!(content.contains("http://localhost:8000"));
-            }
-            Err(_) => {
-                // In some test environments, ProjectDirs might not work, which is acceptable
-            }
-        }
+        let result = ensure_config_exists_at(Some(config_path.clone()));
+        assert!(result.is_ok());
+
+        let path = result.unwrap();
+        assert_eq!(path, config_path);
+        assert!(path.exists());
+
+        let content = fs::read_to_string(&path).unwrap();
+        assert!(content.contains("server_url"));
+        assert!(content.contains("http://localhost:8000"));
+    }
+
+    #[test]
+    fn test_ensure_config_exists_at_preserves_existing_file() {
+        // An existing file must not be overwritten.
+        let temp_dir = TempDir::new().unwrap();
+        let config_path = temp_dir.path().join("config.toml");
+        fs::write(
+            &config_path,
+            "server_url = \"https://existing.example.com\"",
+        )
+        .unwrap();
+
+        let result = ensure_config_exists_at(Some(config_path.clone()));
+        assert!(result.is_ok());
+
+        let content = fs::read_to_string(&config_path).unwrap();
+        assert_eq!(content, "server_url = \"https://existing.example.com\"");
+    }
+
+    #[test]
+    fn test_ensure_config_exists_at_no_path() {
+        // With no resolvable config path the function reports an error.
+        let result = ensure_config_exists_at(None);
+        assert!(result.is_err());
     }
 
     #[test]
