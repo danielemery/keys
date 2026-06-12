@@ -1,0 +1,23 @@
+[package]
+name = "keys"
+version = "0.0.0" # 0.0.0 is a placeholder, before publish it should be set to the current git tag
+edition = "2024"
+description = "CLI client for the keys server"
+
+[dependencies]
+clap = { version = "4.5.1", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+colored = "2.0"
+atty = "0.2"
+toml = "0.8.8"
+directories = "5.0.1"
+shellexpand = "3.1.0"
+
+[dev-dependencies]
+mockito = "1.2.0"
+tempfile = "3.8.0"
+assert_cmd = "2.0"
+predicates = "3.0"
