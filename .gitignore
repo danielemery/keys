@@ -5,3 +5,4 @@ coverage.lcov
 .tmp/
 cli/lcov.info
 .tmp
+result

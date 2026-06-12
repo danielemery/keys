@@ -25,9 +25,15 @@
             nativeBuildInputs = with pkgs; [
               pkg-config
             ];
-            
+
             buildInputs = with pkgs; [
               openssl
+            ];
+
+            # `gpg` must be on PATH during the test suite for the PGP import
+            # integration test to run.
+            nativeCheckInputs = with pkgs; [
+              gnupg
             ];
           };
         });
@@ -36,12 +42,14 @@
         let pkgs = import nixpkgs { inherit system; };
         in {
           default = pkgs.mkShell {
-            nativeBuildInputs = [ pkgs.bashInteractive ];
+            nativeBuildInputs = with pkgs; [ bashInteractive pkg-config ];
             buildInputs = with pkgs; [
               deno
               doppler
               rustc
               cargo
+              openssl
+              gnupg
             ];
           };
         });

@@ -294,6 +294,132 @@ mod tests {
         mock.assert();
     }
 
+    #[test]
+    fn test_pgp_import_help_mentions_gnupg() {
+        get_cmd()
+            .args(["pgp", "--help"])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains("--import"))
+            .stdout(predicate::str::contains("GnuPG"));
+    }
+
+    #[test]
+    fn test_pgp_import_empty_keys_skips_gpg() {
+        // With no keys on the server there is nothing to import, so the command
+        // succeeds without ever invoking gpg (regardless of whether it exists).
+        let mut server = Server::new();
+        let mock = server
+            .mock("GET", "/pgp")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"version": "1.0.0", "keys": []}"#)
+            .create();
+
+        get_cmd()
+            .args(["--server", &server.url(), "pgp", "--import"])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains("nothing to import"));
+
+        mock.assert();
+    }
+
+    #[test]
+    fn test_pgp_import_missing_gpg_reports_clear_error() {
+        // Simulate a machine without GnuPG by emptying PATH so the `gpg`
+        // executable cannot be found. The command should fail with a clear,
+        // actionable message rather than a raw OS error.
+        let mut server = Server::new();
+        let mock = server
+            .mock("GET", "/pgp")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                    "version": "1.0.0",
+                    "keys": [
+                        {
+                            "name": "alice",
+                            "key": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nmQINB...\n-----END PGP PUBLIC KEY BLOCK-----"
+                        }
+                    ]
+                }"#,
+            )
+            .create();
+
+        let empty_path_dir = TempDir::new().unwrap();
+
+        get_cmd()
+            .args(["--server", &server.url(), "pgp", "--import"])
+            .env("PATH", empty_path_dir.path())
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("GnuPG"));
+
+        mock.assert();
+    }
+
+    // A real (throwaway) armored PGP public key, used as a fixture so the import
+    // path can be exercised end-to-end against a real `gpg`. The matching secret
+    // key was discarded after export, so this public key is inert.
+    const TEST_PUBKEY: &str = r#"-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mDMEaiwB6BYJKwYBBAHaRw8BAQdADBZYOTZAPrC3Wzg6zQmjdu7fPagvQ6J41VwQ
+IL3q26S0KUtleXMgQ0xJIFRlc3QgPGtleXMtY2xpLXRlc3RAZXhhbXBsZS5jb20+
+iJAEExYKADgWIQStE2crp0wmxG/ak23CQ93b0/wpCAUCaiwB6AIbAwULCQgHAgYV
+CgkICwIEFgIDAQIeAQIXgAAKCRDCQ93b0/wpCBsFAQCGQ20lzVGFe1YcH/50UvJo
+iHhghTKX72RlhG2SOLfSFgD/XoteUSqlGRTSgn0j572QUGEDTO9AhFtLkLLMbpur
+QQq4OARqLAHoEgorBgEEAZdVAQUBAQdAMKr4RAVl9lRZdPtAdz5oQ+e6qjJMUBsi
+gAy1LK6cD1EDAQgHiHgEGBYKACAWIQStE2crp0wmxG/ak23CQ93b0/wpCAUCaiwB
+6AIbDAAKCRDCQ93b0/wpCNKFAQDnBlIkWzorIdSgTBTgX1zwf76zhPp+sB1EX47q
+pitFQwD/S8QRI+0h0qW8PGanUrFX+VeGErdCwKwfPWsBMbovDgc=
+=nlNY
+-----END PGP PUBLIC KEY BLOCK-----
+"#;
+
+    #[test]
+    fn test_pgp_import_actually_imports_key() {
+        // Full end-to-end import against a real `gpg`: the mock server returns a
+        // valid public key, the CLI pipes it into `gpg --import`, and we then
+        // confirm the key actually landed in an isolated keyring.
+
+        // Armored PGP contains no quotes or backslashes, so escaping newlines is
+        // enough to embed the key in a JSON string.
+        let key_json = TEST_PUBKEY.replace('\n', "\\n");
+        let body = format!(
+            r#"{{"version": "1.0.0", "keys": [{{"name": "Keys CLI Test", "key": "{key_json}"}}]}}"#
+        );
+
+        let mut server = Server::new();
+        let mock = server
+            .mock("GET", "/pgp")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(body)
+            .create();
+
+        // Use an isolated GNUPGHOME so the test never touches the real keyring.
+        let gnupg_home = TempDir::new().unwrap();
+
+        get_cmd()
+            .args(["--server", &server.url(), "pgp", "--import"])
+            .env("GNUPGHOME", gnupg_home.path())
+            .assert()
+            .success()
+            .stdout(predicate::str::contains("Imported 1 PGP key"));
+
+        mock.assert();
+
+        // Verify the key really made it into the isolated keyring.
+        Command::new("gpg")
+            .env("GNUPGHOME", gnupg_home.path())
+            .arg("--list-keys")
+            .assert()
+            .success()
+            .stdout(predicate::str::contains("keys-cli-test@example.com"));
+    }
+
     // ==================== Known Hosts Subcommand Tests ====================
 
     #[test]

@@ -31,8 +31,12 @@ enum Commands {
         force: bool,
     },
 
-    /// Fetch PGP keys from the server
-    Pgp {},
+    /// Fetch PGP keys from the server, or import them into your local GnuPG keyring
+    Pgp {
+        /// Import the fetched PGP keys into your local GnuPG keyring (requires the `gpg` executable)
+        #[arg(short, long)]
+        import: bool,
+    },
 
     /// Fetch known hosts from the server
     KnownHosts {
@@ -62,8 +66,12 @@ fn main() -> Result<()> {
                 commands::ssh_keys::fetch_ssh_keys(&server_url)?;
             }
         }
-        Commands::Pgp {} => {
-            commands::pgp_keys::fetch_pgp_keys(&server_url)?;
+        Commands::Pgp { import } => {
+            if *import {
+                commands::pgp_keys::import_pgp_keys(&server_url)?;
+            } else {
+                commands::pgp_keys::fetch_pgp_keys(&server_url)?;
+            }
         }
         Commands::KnownHosts { write } => {
             if let Some(path) = write {

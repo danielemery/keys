@@ -1,3 +1,6 @@
+use std::io::Write;
+use std::process::{Command, Stdio};
+
 use anyhow::{Context, Result};
 use atty;
 use colored::Colorize;
@@ -5,6 +8,9 @@ use reqwest::header::ACCEPT;
 use serde::Deserialize;
 
 use crate::utils::{ColumnConfig, pretty_print_table};
+
+/// The GnuPG executable used to import PGP keys into the local keyring.
+const GPG_BIN: &str = "gpg";
 
 #[derive(Debug, Deserialize)]
 pub struct PGPKeysResponse {
@@ -60,7 +66,14 @@ pub fn pretty_print_pgp_keys(keys_response: &PGPKeysResponse) {
     );
 }
 
-pub fn fetch_pgp_keys(server_url: &str) -> Result<()> {
+/// Fetch the PGP keys from the server and parse the JSON response.
+///
+/// # Arguments
+/// * `server_url` - The base URL of the keys server
+///
+/// # Returns
+/// * `Result<PGPKeysResponse>` - The parsed keys response or an error
+fn fetch_pgp_keys_from_server(server_url: &str) -> Result<PGPKeysResponse> {
     let url = format!("{server_url}/pgp");
 
     let client = reqwest::blocking::Client::new();
@@ -80,8 +93,13 @@ pub fn fetch_pgp_keys(server_url: &str) -> Result<()> {
         ));
     }
 
-    let keys_response: PGPKeysResponse =
-        response.json().context("Failed to parse JSON response")?;
+    response
+        .json::<PGPKeysResponse>()
+        .context("Failed to parse JSON response")
+}
+
+pub fn fetch_pgp_keys(server_url: &str) -> Result<()> {
+    let keys_response = fetch_pgp_keys_from_server(server_url)?;
 
     // Check if the output is being piped (not connected to a terminal)
     // Use raw/minimal output when piped to another command
@@ -94,6 +112,91 @@ pub fn fetch_pgp_keys(server_url: &str) -> Result<()> {
 
     // Use the pretty print function for interactive terminal output
     pretty_print_pgp_keys(&keys_response);
+
+    Ok(())
+}
+
+/// Concatenate every PGP public key block into a single blob suitable for
+/// feeding to `gpg --import` on stdin.
+fn format_keys_for_import(keys_response: &PGPKeysResponse) -> String {
+    keys_response
+        .keys
+        .iter()
+        .map(|key| key.key.clone())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Fetch the PGP keys from the server and import them into the local GnuPG
+/// keyring by piping them to `gpg --import`.
+///
+/// This requires the `gpg` executable (GnuPG) to be installed and available on
+/// the PATH. A clear, actionable error is returned if it is missing.
+pub fn import_pgp_keys(server_url: &str) -> Result<()> {
+    let keys_response = fetch_pgp_keys_from_server(server_url)?;
+
+    if keys_response.keys.is_empty() {
+        println!("No PGP keys found on the server; nothing to import.");
+        return Ok(());
+    }
+
+    let key_material = format_keys_for_import(&keys_response);
+    run_gpg_import(GPG_BIN, &key_material)?;
+
+    println!(
+        "✅ Imported {} PGP key(s) into your local GnuPG keyring",
+        keys_response.keys.len()
+    );
+
+    Ok(())
+}
+
+/// Spawn `<gpg_bin> --import` and pipe the given key material to its stdin.
+///
+/// Separated from [`import_pgp_keys`] so the process-handling logic can be
+/// tested with stand-in executables.
+fn run_gpg_import(gpg_bin: &str, key_material: &str) -> Result<()> {
+    let mut child = Command::new(gpg_bin)
+        .arg("--import")
+        .stdin(Stdio::piped())
+        .spawn()
+        .map_err(|e| {
+            if e.kind() == std::io::ErrorKind::NotFound {
+                anyhow::anyhow!(
+                    "Could not find the '{gpg_bin}' executable. GnuPG must be installed and \
+                     available on your PATH to import PGP keys. \
+                     See https://gnupg.org/download/ for installation instructions."
+                )
+            } else {
+                anyhow::Error::new(e).context(format!("Failed to start '{gpg_bin} --import'"))
+            }
+        })?;
+
+    // Write the key material to gpg's stdin in its own scope so the pipe is
+    // closed (stdin dropped) before we wait, letting gpg finish.
+    {
+        let mut stdin = child
+            .stdin
+            .take()
+            .context("Failed to open stdin for the gpg process")?;
+        stdin
+            .write_all(key_material.as_bytes())
+            .context("Failed to write PGP keys to the gpg process")?;
+    }
+
+    let status = child
+        .wait()
+        .context("Failed to wait for the gpg process to complete")?;
+
+    if !status.success() {
+        return Err(anyhow::anyhow!(
+            "gpg --import exited with a non-zero status{}",
+            status
+                .code()
+                .map(|c| format!(" (code {c})"))
+                .unwrap_or_default()
+        ));
+    }
 
     Ok(())
 }
@@ -504,5 +607,133 @@ mod tests {
         };
 
         pretty_print_pgp_keys(&keys_response);
+    }
+
+    // ==================== Import / format_keys_for_import Tests ====================
+
+    #[test]
+    fn test_format_keys_for_import_single() {
+        let keys_response = PGPKeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![PGPKey {
+                name: "Alice".to_string(),
+                key:
+                    "-----BEGIN PGP PUBLIC KEY BLOCK-----\nAAAA\n-----END PGP PUBLIC KEY BLOCK-----"
+                        .to_string(),
+            }],
+        };
+
+        let output = format_keys_for_import(&keys_response);
+        assert_eq!(
+            output,
+            "-----BEGIN PGP PUBLIC KEY BLOCK-----\nAAAA\n-----END PGP PUBLIC KEY BLOCK-----"
+        );
+    }
+
+    #[test]
+    fn test_format_keys_for_import_multiple() {
+        let keys_response = PGPKeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![
+                PGPKey {
+                    name: "Alice".to_string(),
+                    key: "KEY_A".to_string(),
+                },
+                PGPKey {
+                    name: "Bob".to_string(),
+                    key: "KEY_B".to_string(),
+                },
+            ],
+        };
+
+        // Keys are separated by a newline so distinct blocks stay separated.
+        let output = format_keys_for_import(&keys_response);
+        assert_eq!(output, "KEY_A\nKEY_B");
+    }
+
+    #[test]
+    fn test_format_keys_for_import_empty() {
+        let keys_response = PGPKeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![],
+        };
+
+        let output = format_keys_for_import(&keys_response);
+        assert_eq!(output, "");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_run_gpg_import_success() {
+        use std::io::Write as _;
+        use std::os::unix::fs::PermissionsExt;
+        use tempfile::TempDir;
+
+        // Write a small script that consumes stdin then exits 0, standing in
+        // for a successful `gpg --import`. (A real binary like `cat` can't be
+        // used because it rejects the `--import` argument run_gpg_import adds.)
+        let temp_dir = TempDir::new().unwrap();
+        let script_path = temp_dir.path().join("fake_gpg.sh");
+        {
+            let mut file = std::fs::File::create(&script_path).unwrap();
+            writeln!(file, "#!/bin/sh\ncat >/dev/null\nexit 0").unwrap();
+        }
+        std::fs::set_permissions(&script_path, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        let result = run_gpg_import(script_path.to_str().unwrap(), "some key material");
+        assert!(
+            result.is_ok(),
+            "run_gpg_import with a successful stand-in should succeed: {:?}",
+            result.err()
+        );
+    }
+
+    #[test]
+    fn test_run_gpg_import_missing_binary() {
+        // A binary that does not exist should produce a friendly, actionable
+        // error rather than a raw OS error.
+        let result = run_gpg_import("definitely-not-a-real-gpg-binary", "key material");
+        assert!(result.is_err());
+
+        let error_msg = result.err().unwrap().to_string();
+        assert!(
+            error_msg.contains("GnuPG"),
+            "error should mention GnuPG, got: {error_msg}"
+        );
+        assert!(
+            error_msg.contains("definitely-not-a-real-gpg-binary"),
+            "error should name the missing binary, got: {error_msg}"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_run_gpg_import_nonzero_exit() {
+        use std::io::Write as _;
+        use std::os::unix::fs::PermissionsExt;
+        use tempfile::TempDir;
+
+        // Write a small script that consumes stdin then exits non-zero, to
+        // simulate `gpg --import` failing (e.g. on a malformed key).
+        let temp_dir = TempDir::new().unwrap();
+        let script_path = temp_dir.path().join("fake_gpg.sh");
+        {
+            let mut file = std::fs::File::create(&script_path).unwrap();
+            writeln!(file, "#!/bin/sh\ncat >/dev/null\nexit 2").unwrap();
+        }
+        std::fs::set_permissions(&script_path, std::fs::Permissions::from_mode(0o755)).unwrap();
+
+        let result = run_gpg_import(script_path.to_str().unwrap(), "key material");
+        assert!(result.is_err());
+
+        let error_msg = result.err().unwrap().to_string();
+        assert!(
+            error_msg.contains("non-zero status"),
+            "error should mention the non-zero status, got: {error_msg}"
+        );
+        assert!(
+            error_msg.contains("code 2"),
+            "error should include the exit code, got: {error_msg}"
+        );
     }
 }

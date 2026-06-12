@@ -7,6 +7,7 @@ A command-line interface for interacting with the keys server.
 - Fetch and display keys from a keys server
 - Raw mode for scripting and automation
 - Safely update `authorized_keys` files without risk of losing ssh access
+- Import PGP keys directly into your local GnuPG keyring
 - TODO: Filter keys by user or tag (exlusions or inclusions)
 - TODO: Update `known_hosts` files
 
@@ -21,6 +22,9 @@ keys --server http://localhost:8000 ssh
 
 # Fetch PGP keys
 keys pgp
+
+# Import PGP keys into your local GnuPG keyring
+keys pgp --import
 
 # Fetch Known hosts
 keys known-hosts
@@ -57,6 +61,24 @@ results.
 
 When `--force` is used, the file will be completely replaced with the keys from
 the server.
+
+## Importing PGP keys into GnuPG
+
+The CLI can fetch the PGP keys from the server and import them straight into
+your local GnuPG keyring:
+
+```bash
+# Fetch the PGP keys and import them into your keyring
+keys pgp --import
+```
+
+This pipes the fetched keys into `gpg --import`, so it requires the `gpg`
+executable (GnuPG) to be installed and available on your `PATH`. If GnuPG is not
+found, the command exits with a clear, actionable error pointing you to
+<https://gnupg.org/download/> rather than a raw OS error.
+
+If the server has no PGP keys, the command reports that there is nothing to
+import and exits successfully without invoking `gpg`.
 
 ## Configuration
 
