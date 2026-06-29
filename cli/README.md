@@ -109,7 +109,7 @@ import and exits successfully without invoking `gpg`.
 The CLI supports reading configuration from a TOML file. By default, it looks
 for configuration in:
 
-```
+```text
 ~/.config/keys/config.toml  # On Linux/macOS
 %APPDATA%\keys\config.toml  # On Windows
 ```
