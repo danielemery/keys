@@ -172,20 +172,25 @@ fn run_gpg_import(gpg_bin: &str, key_material: &str) -> Result<()> {
         })?;
 
     // Write the key material to gpg's stdin in its own scope so the pipe is
-    // closed (stdin dropped) before we wait, letting gpg finish.
-    {
+    // closed (stdin dropped) before we wait, letting gpg finish. Capture the
+    // write result rather than returning early: we must still reap the child
+    // with wait() so we don't leave a zombie process and lose its exit status.
+    let write_result = {
         let mut stdin = child
             .stdin
             .take()
             .context("Failed to open stdin for the gpg process")?;
         stdin
             .write_all(key_material.as_bytes())
-            .context("Failed to write PGP keys to the gpg process")?;
-    }
+            .context("Failed to write PGP keys to the gpg process")
+    };
 
     let status = child
         .wait()
         .context("Failed to wait for the gpg process to complete")?;
+
+    // Surface a write failure only after the child has been waited on.
+    write_result?;
 
     if !status.success() {
         return Err(anyhow::anyhow!(
