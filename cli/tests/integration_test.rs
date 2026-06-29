@@ -647,14 +647,52 @@ pitFQwD/S8QRI+0h0qW8PGanUrFX+VeGErdCwKwfPWsBMbovDgc=
     fn test_init_creates_config() {
         let temp_dir = TempDir::new().unwrap();
 
-        // Set HOME to a writable temp directory so the config directory can be
-        // created in sandboxed environments (e.g. Nix builds).
+        // Point HOME and XDG_CONFIG_HOME at a writable temp directory so the
+        // default config location is both writable (e.g. Nix builds) and
+        // deterministic regardless of the host's own XDG settings.
+        let xdg_config = temp_dir.path().join(".config");
         get_cmd()
             .arg("init")
             .env("HOME", temp_dir.path())
+            .env("XDG_CONFIG_HOME", &xdg_config)
             .assert()
             .success()
             .stdout(predicate::str::contains("config"));
+
+        // The success message isn't enough on its own: verify the file was
+        // actually written at the default location with the expected TOML
+        // contents.
+        let config_path = xdg_config.join("keys").join("config.toml");
+        assert!(
+            config_path.exists(),
+            "init should create {}",
+            config_path.display()
+        );
+        let contents = fs::read_to_string(&config_path).unwrap();
+        assert!(contents.contains("server_url"));
+        assert!(contents.contains("http://localhost:8000"));
+    }
+
+    #[test]
+    fn test_init_creates_config_at_custom_path() {
+        let temp_dir = TempDir::new().unwrap();
+        let config_path = temp_dir.path().join("custom").join("config.toml");
+
+        // `--config` should determine where `init` writes the file, not just be
+        // ignored in favour of the default location.
+        get_cmd()
+            .args(["--config", config_path.to_str().unwrap(), "init"])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains(config_path.to_str().unwrap()));
+
+        assert!(
+            config_path.exists(),
+            "init --config should create {}",
+            config_path.display()
+        );
+        let contents = fs::read_to_string(&config_path).unwrap();
+        assert!(contents.contains("server_url"));
     }
 
     // ==================== Config File Tests ====================

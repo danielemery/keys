@@ -7,11 +7,11 @@ use keys::{commands, config};
 #[command(author, version, about, long_about = None)]
 struct Cli {
     /// The server URL (overrides config file)
-    #[arg(short, long)]
+    #[arg(short, long, global = true)]
     server: Option<String>,
 
     /// Path to config file (default: ~/.config/keys/config.toml)
-    #[arg(short = 'c', long)]
+    #[arg(short = 'c', long, global = true)]
     config: Option<String>,
 
     #[command(subcommand)]
@@ -56,6 +56,14 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    // `init` creates the config file rather than reading it, so handle it before
+    // the normal config-loading flow and target the user-selected path (if any).
+    if let Commands::Init {} = cli.command {
+        let config_path = config::ensure_config_exists(cli.config.as_deref())?;
+        println!("Configuration file created at: {}", config_path.display());
+        return Ok(());
+    }
+
     // Load configuration, with CLI-provided path if specified
     let config = config::load_config(cli.config.as_deref())?;
 
@@ -84,11 +92,8 @@ fn main() -> Result<()> {
                 commands::known_hosts::fetch_known_hosts(&server_url)?;
             }
         }
-        Commands::Init {} => {
-            // Create a default config file
-            let config_path = config::ensure_default_config_exists()?;
-            println!("Configuration file created at: {}", config_path.display());
-        }
+        // `Init` is handled above, before config loading.
+        Commands::Init {} => unreachable!("Init is handled before config loading"),
     }
 
     Ok(())

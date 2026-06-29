@@ -86,6 +86,18 @@ pub fn ensure_default_config_exists() -> Result<PathBuf> {
     ensure_config_exists_at(get_default_config_path())
 }
 
+/// Creates a default config file, honoring an explicitly provided path.
+///
+/// When `config_path` is `Some`, the config is created there; otherwise it is
+/// created at the default location. This lets `keys init --config <path>`
+/// initialize the same file the rest of the CLI will read.
+pub fn ensure_config_exists(config_path: Option<&str>) -> Result<PathBuf> {
+    match config_path {
+        Some(path) => ensure_config_exists_at(Some(PathBuf::from(path))),
+        None => ensure_config_exists_at(get_default_config_path()),
+    }
+}
+
 /// Creates a default config file at the given path if it doesn't exist.
 ///
 /// Split out from [`ensure_default_config_exists`] so tests can target a temp
