@@ -107,7 +107,10 @@ pub fn pretty_print_ssh_keys(keys_response: &KeysResponse) {
 fn fetch_keys_from_server(server_url: &str) -> Result<KeysResponse> {
     let url = format!("{server_url}/keys");
 
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .context("Failed to build HTTP client")?;
     let response = client
         .get(&url)
         .header(ACCEPT, "application/json")

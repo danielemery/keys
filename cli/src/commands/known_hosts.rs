@@ -160,7 +160,10 @@ pub fn pretty_print_known_hosts(response: &KnownHostsResponse) {
 fn fetch_known_hosts_from_server(server_url: &str) -> Result<KnownHostsResponse> {
     let url = format!("{server_url}/known_hosts");
 
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .context("Failed to build HTTP client")?;
     let response = client
         .get(&url)
         .header(ACCEPT, "application/json")

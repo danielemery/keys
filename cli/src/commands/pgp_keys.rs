@@ -75,7 +75,10 @@ pub fn pretty_print_pgp_keys(keys_response: &PGPKeysResponse) {
 fn fetch_pgp_keys_from_server(server_url: &str) -> Result<PGPKeysResponse> {
     let url = format!("{server_url}/pgp");
 
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .context("Failed to build HTTP client")?;
     let response = client
         .get(&url)
         .header(ACCEPT, "application/json")
