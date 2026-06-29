@@ -8,8 +8,8 @@ A command-line interface for interacting with the keys server.
 - Raw mode for scripting and automation
 - Safely update `authorized_keys` files without risk of losing ssh access
 - Import PGP keys directly into your local GnuPG keyring
-- TODO: Filter keys by user or tag (exlusions or inclusions)
-- TODO: Update `known_hosts` files
+- Safely update `known_hosts` files without removing existing entries
+- TODO: Filter keys by user or tag (exclusions or inclusions)
 
 ## Usage
 
@@ -28,6 +28,9 @@ keys pgp --import
 
 # Fetch Known hosts
 keys known-hosts
+
+# Safely add known hosts to a file, preserving existing entries
+keys known-hosts --write ~/.ssh/known_hosts
 
 # Display help for the whole CLI
 keys --help
@@ -61,6 +64,27 @@ results.
 
 When `--force` is used, the file will be completely replaced with the keys from
 the server.
+
+## Safely Updating known_hosts
+
+The `known-hosts` command writes entries with the same safety model as
+`ssh --write`:
+
+```bash
+# Only add new entries from the server, preserving existing ones
+keys known-hosts --write ~/.ssh/known_hosts
+
+# Replace the entire file with the server's entries
+keys known-hosts --write ~/.ssh/known_hosts --force
+```
+
+By default (without `--force`), existing entries are preserved, new server
+entries are appended, and entries that match a server entry have their flags and
+comment refreshed. Entries present locally but absent from the server are kept
+and reported. Entries are matched on their `hosts key_type key` identity,
+ignoring marker flags and comments.
+
+With `--force`, the file is replaced entirely with the server's entries.
 
 ## Importing PGP keys into GnuPG
 

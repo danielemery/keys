@@ -531,6 +531,107 @@ pitFQwD/S8QRI+0h0qW8PGanUrFX+VeGErdCwKwfPWsBMbovDgc=
         assert!(content.contains("ssh-ed25519"));
     }
 
+    #[test]
+    fn test_known_hosts_write_additive_mode() {
+        let mut server = Server::new();
+        let mock = server
+            .mock("GET", "/known_hosts")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                    "version": "1.0.0",
+                    "knownHosts": [
+                        {
+                            "hosts": ["new.example.com"],
+                            "keys": [
+                                {
+                                    "type": "ssh-rsa",
+                                    "key": "AAAABNewHostKey"
+                                }
+                            ]
+                        }
+                    ]
+                }"#,
+            )
+            .create();
+
+        let temp_dir = TempDir::new().unwrap();
+        let known_hosts_path = temp_dir.path().join("known_hosts");
+
+        // Existing file with a local-only entry
+        fs::write(&known_hosts_path, "old.example.com ssh-rsa OldHostKey\n").unwrap();
+
+        // Without --force, should preserve existing entries
+        get_cmd()
+            .args([
+                "--server",
+                &server.url(),
+                "known-hosts",
+                "--write",
+                known_hosts_path.to_str().unwrap(),
+            ])
+            .assert()
+            .success();
+
+        mock.assert();
+
+        let content = fs::read_to_string(&known_hosts_path).unwrap();
+        assert!(content.contains("old.example.com ssh-rsa OldHostKey"));
+        assert!(content.contains("new.example.com ssh-rsa AAAABNewHostKey"));
+    }
+
+    #[test]
+    fn test_known_hosts_write_with_force_flag() {
+        let mut server = Server::new();
+        let mock = server
+            .mock("GET", "/known_hosts")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{
+                    "version": "1.0.0",
+                    "knownHosts": [
+                        {
+                            "hosts": ["new.example.com"],
+                            "keys": [
+                                {
+                                    "type": "ssh-rsa",
+                                    "key": "AAAABNewHostKey"
+                                }
+                            ]
+                        }
+                    ]
+                }"#,
+            )
+            .create();
+
+        let temp_dir = TempDir::new().unwrap();
+        let known_hosts_path = temp_dir.path().join("known_hosts");
+
+        // Existing file with a local-only entry
+        fs::write(&known_hosts_path, "old.example.com ssh-rsa OldHostKey\n").unwrap();
+
+        // With --force, the file is replaced entirely
+        get_cmd()
+            .args([
+                "--server",
+                &server.url(),
+                "known-hosts",
+                "--write",
+                known_hosts_path.to_str().unwrap(),
+                "--force",
+            ])
+            .assert()
+            .success();
+
+        mock.assert();
+
+        let content = fs::read_to_string(&known_hosts_path).unwrap();
+        assert!(!content.contains("old.example.com"));
+        assert!(content.contains("new.example.com ssh-rsa AAAABNewHostKey"));
+    }
+
     // ==================== Init Subcommand Tests ====================
 
     #[test]

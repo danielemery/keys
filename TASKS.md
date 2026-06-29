@@ -16,9 +16,9 @@ passes (`test`, `test-rust-cli`, codecov, CodeRabbit); PR #77 is `MERGEABLE` /
 
 ## Should fix before merge
 
-- [ ] **Remove stale README TODO** (`cli/README.md:12`,
-  `- TODO: Update known_hosts files`). Known-hosts read and write are both
-  implemented and tested. Keep the filter-by-user/tag TODO — that's still real.
+- [x] **Remove stale README TODO** (`- TODO: Update known_hosts files`).
+  Replaced with a real feature bullet (safe `known_hosts` updates); kept the
+  filter-by-user/tag TODO and fixed its "exlusions" typo.
 - [x] **Drop the unmaintained `atty` crate** (RUSTSEC-2021-0145). Replaced the
   three TTY checks with `std::io::stdout().is_terminal()` and removed the
   dependency from `Cargo.toml` / `Cargo.lock`.
@@ -26,20 +26,13 @@ passes (`test`, `test-rust-cli`, codecov, CodeRabbit); PR #77 is `MERGEABLE` /
   `rust-cli-build` job in `publish.yml` never stamps the git tag, so the released
   binary reports `keys --version 0.0.0`. Add a step that sets the version from
   the tag before `cargo build --release`.
-- [ ] **Make `known-hosts --write` consistent with `ssh --write`.** Currently it
-  always replaces the whole file; change it to additive-by-default and require
-  `--force` to fully replace, matching the SSH command's safety model.
-  - Add a `--force` flag to the `KnownHosts` subcommand in `main.rs` and thread
-    it into `write_known_hosts`.
-  - Default (no `--force`): read existing entries, add server entries not already
-    present, preserve local-only entries. Dedup by the `hosts key_type key`
-    identity (ignoring trailing comment / leading flags), mirroring how
-    `ssh_keys::extract_key_part` compares on type+key. Refresh flags/comment when
-    an existing entry matches a server entry.
-  - `--force`: keep today's behaviour (replace the file entirely with server
-    entries).
-  - Update help text, `cli/README.md`, and add tests for both modes (additive
-    preserves local entries; `--force` replaces) alongside the existing ones.
+- [x] **Make `known-hosts --write` consistent with `ssh --write`.** Now
+  additive-by-default with `--force` to fully replace, matching the SSH model.
+  Added the `--force` flag, dedup by the `hosts key_type key` identity (ignoring
+  flags/comment), local-entry preservation + warning, comment/flag refresh on
+  match, and updated help text + `cli/README.md`. Added unit tests (preserve,
+  no-duplicate, refresh-comment, force-overwrite) and integration tests
+  (additive + `--force`).
 
 ## Lower priority — deliberate call
 

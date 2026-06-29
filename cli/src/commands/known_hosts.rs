@@ -271,13 +271,47 @@ fn format_known_hosts_line(host: &KnownHost, key: &HostKey) -> String {
     }
 }
 
-pub fn write_known_hosts(server_url: &str, file_path: &str) -> Result<()> {
+/// Identity of a server-provided known_hosts entry: the `hosts key_type key`
+/// triple, ignoring marker flags and comments. Used to detect whether an entry
+/// is already present locally.
+fn server_entry_identity(host: &KnownHost, key: &HostKey) -> String {
+    format!("{} {} {}", host.hosts.join(","), key.key_type, key.key)
+}
+
+/// Extract the identity (`hosts key_type key`) from an existing known_hosts
+/// line, skipping any leading marker flags (`@revoked`, `@cert-authority`) and
+/// the trailing `# comment`. Returns `None` if the line is too short to parse.
+fn extract_known_hosts_identity(line: &str) -> Option<String> {
+    let without_comment = line.split('#').next().unwrap_or(line);
+    let mut tokens = without_comment
+        .split_whitespace()
+        .skip_while(|t| t.starts_with('@'));
+    let hosts = tokens.next()?;
+    let key_type = tokens.next()?;
+    let key = tokens.next()?;
+    Some(format!("{hosts} {key_type} {key}"))
+}
+
+pub fn write_known_hosts(server_url: &str, file_path: &str, force: bool) -> Result<()> {
     // Fetch known hosts from the server
     let known_hosts_response = fetch_known_hosts_from_server(server_url)?;
 
     // Expand ~ to home directory if present
     let expanded_path = shellexpand::tilde(file_path);
     let path = std::path::Path::new(expanded_path.as_ref());
+
+    // Read existing entries if the file exists, skipping blank and comment-only
+    // lines so they don't get treated as host entries.
+    let existing_lines = if path.exists() {
+        std::fs::read_to_string(path)
+            .with_context(|| format!("Failed to read existing file: {}", path.display()))?
+            .lines()
+            .filter(|line| !line.trim().is_empty() && !line.trim().starts_with('#'))
+            .map(|s| s.to_string())
+            .collect::<Vec<_>>()
+    } else {
+        Vec::new()
+    };
 
     // Create directory if it doesn't exist
     if let Some(parent) = path.parent()
@@ -287,37 +321,131 @@ pub fn write_known_hosts(server_url: &str, file_path: &str) -> Result<()> {
             .with_context(|| format!("Failed to create parent directory: {}", parent.display()))?;
     }
 
-    // Generate the file content (always replace completely)
-    let mut lines = Vec::new();
-    for host in &known_hosts_response.hosts {
-        for key in &host.keys {
-            lines.push(format_known_hosts_line(host, key));
-        }
-    }
-
-    let file_content = lines.join("\n");
-    if !file_content.is_empty() {
-        let file_content = format!("{}\n", file_content);
-        std::fs::write(path, file_content)
-            .with_context(|| format!("Failed to write to file: {}", path.display()))?;
-    } else {
-        // Write empty file if no hosts
-        std::fs::write(path, "")
-            .with_context(|| format!("Failed to write to file: {}", path.display()))?;
-    }
-
-    // Count the total number of entries written
-    let total_entries: usize = known_hosts_response
+    // Flatten server entries into (identity, formatted line) pairs.
+    let server_entries: Vec<(String, String)> = known_hosts_response
         .hosts
         .iter()
-        .map(|h| h.keys.len())
-        .sum();
+        .flat_map(|host| {
+            host.keys.iter().map(move |key| {
+                (
+                    server_entry_identity(host, key),
+                    format_known_hosts_line(host, key),
+                )
+            })
+        })
+        .collect();
+    let num_server_entries = server_entries.len();
 
-    println!(
-        "✅ Wrote {} known host entries to {}",
-        total_entries,
-        path.display()
-    );
+    // Identity of each existing line (None if it can't be parsed).
+    let existing_identities: Vec<Option<String>> = existing_lines
+        .iter()
+        .map(|line| extract_known_hosts_identity(line))
+        .collect();
+
+    let is_on_server = |identity: &str| server_entries.iter().any(|(sid, _)| sid == identity);
+    let is_present_locally = |identity: &str| {
+        existing_identities
+            .iter()
+            .any(|id| id.as_deref() == Some(identity))
+    };
+
+    // Entries present locally but absent from the server (reported in safe mode).
+    let num_local_only = existing_identities
+        .iter()
+        .filter(|id| id.as_deref().map(|i| !is_on_server(i)).unwrap_or(true))
+        .count();
+
+    let mut updated_count = 0;
+
+    let file_content = if force {
+        // Force mode: replace the file with exactly the server entries.
+        server_entries
+            .iter()
+            .map(|(_, line)| line.clone())
+            .collect::<Vec<_>>()
+            .join("\n")
+    } else {
+        // Safe mode: keep existing entries, refreshing those that match a server
+        // entry, then append server entries that aren't already present.
+        let mut result_lines = Vec::new();
+
+        for (existing_line, identity) in existing_lines.iter().zip(existing_identities.iter()) {
+            if let Some(identity) = identity
+                && let Some((_, server_line)) =
+                    server_entries.iter().find(|(sid, _)| sid == identity)
+            {
+                if server_line != existing_line {
+                    updated_count += 1;
+                }
+                result_lines.push(server_line.clone());
+            } else {
+                result_lines.push(existing_line.clone());
+            }
+        }
+
+        for (identity, server_line) in &server_entries {
+            if !is_present_locally(identity) {
+                result_lines.push(server_line.clone());
+            }
+        }
+
+        result_lines.join("\n")
+    };
+
+    // Write to file, ensuring a trailing newline when there is content.
+    let file_content = if file_content.is_empty() {
+        String::new()
+    } else {
+        format!("{file_content}\n")
+    };
+    std::fs::write(path, &file_content)
+        .with_context(|| format!("Failed to write to file: {}", path.display()))?;
+
+    // Report what happened.
+    let num_existing = existing_lines.len();
+    if force {
+        println!(
+            "✅ Wrote {} known host entries to {} (overwriting {} existing entries)",
+            num_server_entries,
+            path.display(),
+            num_existing
+        );
+    } else {
+        let num_added = server_entries
+            .iter()
+            .filter(|(identity, _)| !is_present_locally(identity))
+            .count();
+
+        if num_added > 0 {
+            let mut message = format!(
+                "✅ Added {} new known host entries to {}",
+                num_added,
+                path.display()
+            );
+            if updated_count > 0 {
+                message.push_str(&format!(" and updated {updated_count} existing entries"));
+            }
+            println!("{message}");
+        } else {
+            let mut message = format!(
+                "✅ Server known host entries are already present at {}",
+                path.display()
+            );
+            if updated_count > 0 {
+                message.push_str(&format!(" (updated {updated_count} entries)"));
+            }
+            println!("{message}");
+        }
+
+        if num_local_only > 0 {
+            println!(
+                "{}  {} local entries were not removed (use {} to remove)",
+                "⚠️".yellow().bold(),
+                num_local_only.to_string().yellow().bold(),
+                "--force".yellow().bold()
+            );
+        }
+    }
 
     Ok(())
 }
@@ -993,7 +1121,7 @@ mod tests {
         let file_path = temp_dir.path().join("known_hosts");
 
         // Call function
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
         assert!(
             result.is_ok(),
             "write_known_hosts failed: {:?}",
@@ -1045,7 +1173,7 @@ mod tests {
         assert!(!file_path.parent().unwrap().exists());
 
         // Call function
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
         assert!(
             result.is_ok(),
             "write_known_hosts failed: {:?}",
@@ -1100,7 +1228,7 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let file_path = temp_dir.path().join("known_hosts");
 
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
         assert!(result.is_ok());
 
         let contents = fs::read_to_string(&file_path).unwrap();
@@ -1152,7 +1280,7 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let file_path = temp_dir.path().join("known_hosts");
 
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
         assert!(result.is_ok());
 
         let contents = fs::read_to_string(&file_path).unwrap();
@@ -1176,7 +1304,7 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let file_path = temp_dir.path().join("known_hosts");
 
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
         assert!(result.is_ok());
 
         // File should exist but be empty
@@ -1186,7 +1314,7 @@ mod tests {
     }
 
     #[test]
-    fn test_write_known_hosts_overwrites_existing_file() {
+    fn test_write_known_hosts_force_overwrites_existing_file() {
         use std::fs;
         use tempfile::tempdir;
 
@@ -1214,15 +1342,132 @@ mod tests {
         // Create existing file with different content
         fs::write(&file_path, "old.example.com ssh-rsa OLD_KEY\n").unwrap();
 
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), true);
         assert!(result.is_ok());
 
         let contents = fs::read_to_string(&file_path).unwrap();
-        // Old content should be gone
+        // With --force the old content should be gone
         assert!(!contents.contains("old.example.com"));
         assert!(!contents.contains("OLD_KEY"));
         // New content should be present
         assert!(contents.contains("new.example.com ssh-rsa NEW_KEY"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_additive_preserves_local_entries() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["new.example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "NEW_KEY"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        // Existing file has a local-only entry not present on the server
+        fs::write(&file_path, "old.example.com ssh-rsa OLD_KEY\n").unwrap();
+
+        // Default (additive) mode
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
+        assert!(result.is_ok());
+
+        let contents = fs::read_to_string(&file_path).unwrap();
+        // Local-only entry is preserved
+        assert!(contents.contains("old.example.com ssh-rsa OLD_KEY"));
+        // Server entry is added
+        assert!(contents.contains("new.example.com ssh-rsa NEW_KEY"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_additive_does_not_duplicate() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["github.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "SHARED_KEY"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        // Existing file already contains the same entry (no comment locally)
+        fs::write(&file_path, "github.com ssh-rsa SHARED_KEY\n").unwrap();
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
+        assert!(result.is_ok());
+
+        let contents = fs::read_to_string(&file_path).unwrap();
+        // The entry should appear exactly once, not duplicated
+        let occurrences = contents.matches("github.com ssh-rsa SHARED_KEY").count();
+        assert_eq!(occurrences, 1);
+    }
+
+    #[test]
+    fn test_write_known_hosts_additive_refreshes_comment() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["github.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "SHARED_KEY",
+                            "comment": "GitHub RSA key"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        // Existing entry matches the server key but lacks the comment
+        fs::write(&file_path, "github.com ssh-rsa SHARED_KEY\n").unwrap();
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
+        assert!(result.is_ok());
+
+        let contents = fs::read_to_string(&file_path).unwrap();
+        // The matching entry is refreshed with the server's comment, not duplicated
+        assert_eq!(contents.matches("github.com ssh-rsa SHARED_KEY").count(), 1);
+        assert!(contents.contains("# GitHub RSA key"));
     }
 
     #[test]
@@ -1235,7 +1480,7 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let file_path = temp_dir.path().join("known_hosts");
 
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
         assert!(result.is_err());
 
         // File should not be created on error
@@ -1268,7 +1513,7 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let file_path = temp_dir.path().join("known_hosts");
 
-        let result = write_known_hosts(&server_url, file_path.to_str().unwrap());
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
         assert!(result.is_ok());
 
         let contents = fs::read_to_string(&file_path).unwrap();

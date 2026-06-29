@@ -40,9 +40,13 @@ enum Commands {
 
     /// Fetch known hosts from the server
     KnownHosts {
-        /// Write known hosts to file (replaces entire file)
+        /// Write known hosts to a file (adds new entries, preserving existing ones)
         #[arg(short, long)]
         write: Option<String>,
+
+        /// Force overwrite the file with the server's entries (default is to only add new entries)
+        #[arg(short, long)]
+        force: bool,
     },
 
     /// Initialize a default config file
@@ -73,9 +77,9 @@ fn main() -> Result<()> {
                 commands::pgp_keys::fetch_pgp_keys(&server_url)?;
             }
         }
-        Commands::KnownHosts { write } => {
+        Commands::KnownHosts { write, force } => {
             if let Some(path) = write {
-                commands::known_hosts::write_known_hosts(&server_url, path)?;
+                commands::known_hosts::write_known_hosts(&server_url, path, *force)?;
             } else {
                 commands::known_hosts::fetch_known_hosts(&server_url)?;
             }
