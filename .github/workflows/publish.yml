@@ -104,7 +104,7 @@ jobs:
       # 0.0.0 placeholder, so clap's `--version` would otherwise report 0.0.0.
       - name: Set CLI version from tag
         working-directory: ./cli
-        run: sed -i "s/^version = .*/version = \"${{ steps.version.outputs.full }}\"/" Cargo.toml
+        run: sed -i "s/^version = .*/version = \"${{ steps.version.outputs.full_without_prefix }}\"/" Cargo.toml
 
       - name: Build Rust CLI
         working-directory: ./cli
