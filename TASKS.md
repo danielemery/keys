@@ -22,10 +22,11 @@ passes (`test`, `test-rust-cli`, codecov, CodeRabbit); PR #77 is `MERGEABLE` /
 - [x] **Drop the unmaintained `atty` crate** (RUSTSEC-2021-0145). Replaced the
   three TTY checks with `std::io::stdout().is_terminal()` and removed the
   dependency from `Cargo.toml` / `Cargo.lock`.
-- [ ] **Inject the release version.** `Cargo.toml` is pinned at `0.0.0` and the
-  `rust-cli-build` job in `publish.yml` never stamps the git tag, so the released
-  binary reports `keys --version 0.0.0`. Add a step that sets the version from
-  the tag before `cargo build --release`.
+- [x] **Inject the release version.** Added a "Set CLI version from tag" step to
+  the `rust-cli-build` job in `publish.yml` that `sed`s the tag version
+  (`steps.version.outputs.full`) into `cli/Cargo.toml` before `cargo build
+  --release`, so the released binary's `--version` reports the real version
+  instead of the `0.0.0` placeholder.
 - [x] **Make `known-hosts --write` consistent with `ssh --write`.** Now
   additive-by-default with `--force` to fully replace, matching the SSH model.
   Added the `--force` flag, dedup by the `hosts key_type key` identity (ignoring
