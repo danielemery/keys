@@ -193,39 +193,9 @@ pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
     if !std::io::stdout().is_terminal() {
         for host in &known_hosts_response.hosts {
             for key in &host.keys {
-                let hosts_str = host.hosts.join(",");
-                let key_type = &key.key_type;
-                let key_value = &key.key;
-
-                // Add flags if present
-                let mut flags = Vec::new();
-                if key.revoked.unwrap_or(false) {
-                    flags.push("@revoked");
-                }
-                if key.cert_authority.unwrap_or(false) {
-                    flags.push("@cert-authority");
-                }
-
-                // Format comment if present
-                let comment_str = if let Some(comment) = &key.comment {
-                    format!(" # {comment}")
-                } else {
-                    String::new()
-                };
-
-                // Output in OpenSSH known_hosts format with flags and optional comment
-                if flags.is_empty() {
-                    println!("{hosts_str} {key_type} {key_value}{comment_str}");
-                } else {
-                    println!(
-                        "{} {} {} {}{}",
-                        flags.join(" "),
-                        hosts_str,
-                        key_type,
-                        key_value,
-                        comment_str
-                    );
-                }
+                // Reuse the shared formatter so the piped output matches what
+                // `--write` produces, including single-marker handling.
+                println!("{}", format_known_hosts_line(host, key));
             }
         }
         return Ok(());
@@ -243,14 +213,11 @@ fn format_known_hosts_line(host: &KnownHost, key: &HostKey) -> String {
     let key_type = &key.key_type;
     let key_value = &key.key;
 
-    // Add flags if present
-    let mut flags = Vec::new();
-    if key.revoked.unwrap_or(false) {
-        flags.push("@revoked");
-    }
-    if key.cert_authority.unwrap_or(false) {
-        flags.push("@cert-authority");
-    }
+    // Add a marker if present. A known_hosts line carries at most one marker;
+    // `@revoked` and `@cert-authority` are mutually exclusive, so prefer
+    // `@revoked` when the server marks a key as both (a revoked CA must not be
+    // trusted).
+    let marker = marker_for(key);
 
     // Format comment if present
     let comment_str = if let Some(comment) = &key.comment {
@@ -259,18 +226,22 @@ fn format_known_hosts_line(host: &KnownHost, key: &HostKey) -> String {
         String::new()
     };
 
-    // Output in OpenSSH known_hosts format with flags and optional comment
-    if flags.is_empty() {
-        format!("{hosts_str} {key_type} {key_value}{comment_str}")
+    // Output in OpenSSH known_hosts format with marker and optional comment
+    match marker {
+        Some(marker) => format!("{marker} {hosts_str} {key_type} {key_value}{comment_str}"),
+        None => format!("{hosts_str} {key_type} {key_value}{comment_str}"),
+    }
+}
+
+/// The single OpenSSH marker for a key, or `None` if it carries neither.
+/// `@revoked` and `@cert-authority` are mutually exclusive; `@revoked` wins.
+fn marker_for(key: &HostKey) -> Option<&'static str> {
+    if key.revoked.unwrap_or(false) {
+        Some("@revoked")
+    } else if key.cert_authority.unwrap_or(false) {
+        Some("@cert-authority")
     } else {
-        format!(
-            "{} {} {} {}{}",
-            flags.join(" "),
-            hosts_str,
-            key_type,
-            key_value,
-            comment_str
-        )
+        None
     }
 }
 
@@ -1042,11 +1013,14 @@ mod tests {
             }],
         };
 
+        // `@revoked` and `@cert-authority` are mutually exclusive; when the
+        // server sets both, only `@revoked` is emitted.
         let result = format_known_hosts_line(&host, &host.keys[0]);
         assert_eq!(
             result,
-            "@revoked @cert-authority both.example.com ssh-rsa AAAAB3NzaC1yc2EBOTH"
+            "@revoked both.example.com ssh-rsa AAAAB3NzaC1yc2EBOTH"
         );
+        assert!(!result.contains("@cert-authority"));
     }
 
     #[test]
@@ -1063,10 +1037,11 @@ mod tests {
             }],
         };
 
+        // Both flags set on the server collapse to the single `@revoked` marker.
         let result = format_known_hosts_line(&host, &host.keys[0]);
         assert_eq!(
             result,
-            "@revoked @cert-authority full.example.com,192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EFULL # Full example with all options"
+            "@revoked full.example.com,192.168.1.1 ssh-rsa AAAAB3NzaC1yc2EFULL # Full example with all options"
         );
     }
 
