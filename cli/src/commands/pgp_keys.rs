@@ -1,8 +1,7 @@
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 use std::process::{Command, Stdio};
 
 use anyhow::{Context, Result};
-use atty;
 use colored::Colorize;
 use reqwest::header::ACCEPT;
 use serde::Deserialize;
@@ -103,7 +102,7 @@ pub fn fetch_pgp_keys(server_url: &str) -> Result<()> {
 
     // Check if the output is being piped (not connected to a terminal)
     // Use raw/minimal output when piped to another command
-    if !atty::is(atty::Stream::Stdout) {
+    if !std::io::stdout().is_terminal() {
         for key in &keys_response.keys {
             println!("{}", key.key);
         }

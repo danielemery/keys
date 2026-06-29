@@ -1,5 +1,6 @@
+use std::io::IsTerminal;
+
 use anyhow::{Context, Result};
-use atty;
 use colored::Colorize;
 use reqwest::header::ACCEPT;
 use serde::Deserialize;
@@ -186,7 +187,7 @@ pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
 
     // Check if the output is being piped (not connected to a terminal)
     // Use raw/minimal output when piped to another command
-    if !atty::is(atty::Stream::Stdout) {
+    if !std::io::stdout().is_terminal() {
         for host in &known_hosts_response.hosts {
             for key in &host.keys {
                 let hosts_str = host.hosts.join(",");

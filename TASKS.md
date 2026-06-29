@@ -19,10 +19,9 @@ passes (`test`, `test-rust-cli`, codecov, CodeRabbit); PR #77 is `MERGEABLE` /
 - [ ] **Remove stale README TODO** (`cli/README.md:12`,
   `- TODO: Update known_hosts files`). Known-hosts read and write are both
   implemented and tested. Keep the filter-by-user/tag TODO — that's still real.
-- [ ] **Drop the unmaintained `atty` crate** (RUSTSEC-2021-0145). Replace the
-  three TTY checks (`ssh_keys.rs:136`, `pgp_keys.rs:106`, `known_hosts.rs:189`)
-  with `std::io::IsTerminal` from std (available on `edition = "2024"`) and
-  remove the dependency from `Cargo.toml`.
+- [x] **Drop the unmaintained `atty` crate** (RUSTSEC-2021-0145). Replaced the
+  three TTY checks with `std::io::stdout().is_terminal()` and removed the
+  dependency from `Cargo.toml` / `Cargo.lock`.
 - [ ] **Inject the release version.** `Cargo.toml` is pinned at `0.0.0` and the
   `rust-cli-build` job in `publish.yml` never stamps the git tag, so the released
   binary reports `keys --version 0.0.0`. Add a step that sets the version from

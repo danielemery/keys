@@ -1,5 +1,6 @@
+use std::io::IsTerminal;
+
 use anyhow::{Context, Result};
-use atty;
 use colored::Colorize;
 use reqwest::header::ACCEPT;
 use serde::Deserialize;
@@ -133,7 +134,7 @@ pub fn fetch_ssh_keys(server_url: &str) -> Result<()> {
 
     // Check if the output is being piped (not connected to a terminal)
     // Use raw/minimal output when piped to another command
-    if !atty::is(atty::Stream::Stdout) {
+    if !std::io::stdout().is_terminal() {
         let output = format_keys_for_pipe(&keys_response);
         if !output.is_empty() {
             println!("{output}");
@@ -743,7 +744,7 @@ mod tests {
 
         let (server_url, _server) = setup_mock_server(mock_response);
 
-        // Note: Testing the non-TTY path is challenging because atty::is() checks the actual stdout
+        // Note: Testing the non-TTY path is challenging because is_terminal() checks the actual stdout
         // In a real test environment, we can't easily mock this behavior
         // This test verifies the function completes successfully, but the actual output format
         // depends on whether the test is run in a TTY or not
