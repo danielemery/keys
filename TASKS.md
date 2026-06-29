@@ -37,9 +37,13 @@ passes (`test`, `test-rust-cli`, codecov, CodeRabbit); PR #77 is `MERGEABLE` /
 
 ## Lower priority — deliberate call
 
-- [ ] **CI action-version consistency.** New Rust jobs use `actions/checkout@v4`
-  and `check-version-format-action@v3`; existing jobs use `@v6` / `@v5.0.1`.
-  Also `actions-rs/toolchain@v1` is archived — consider `dtolnay/rust-toolchain`.
+- [x] **CI action-version consistency.** Bumped the Rust jobs to
+  `actions/checkout@v6` and `check-version-format-action@v5.0.1` to match the
+  existing jobs, and replaced the archived `actions-rs/toolchain@v1` with
+  `dtolnay/rust-toolchain@master` pinned to an explicit `toolchain: 1.89.0` in
+  both `test.yml` and `publish.yml`. Added a Renovate `customManager` (mirroring
+  the existing `deno-version` one) so the pinned Rust version is bumped via PR
+  against the `rust` Docker datasource.
 
 ## Done
 
