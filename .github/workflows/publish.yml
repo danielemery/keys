@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: nowsprinting/check-version-format-action@v5.0.1
+      - uses: nowsprinting/check-version-format-action@v5.0.2
         id: version
         with:
           prefix: "v"
@@ -58,7 +58,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: nowsprinting/check-version-format-action@v5.0.1
+      - uses: nowsprinting/check-version-format-action@v5.0.2
         id: version
         with:
           prefix: "v"
@@ -90,7 +90,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: nowsprinting/check-version-format-action@v5.0.1
+      - uses: nowsprinting/check-version-format-action@v5.0.2
         id: version
         with:
           prefix: "v"
@@ -130,7 +130,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: nowsprinting/check-version-format-action@v5.0.1
+      - uses: nowsprinting/check-version-format-action@v5.0.2
         id: version
         with:
           prefix: "v"
