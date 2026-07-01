@@ -5,7 +5,7 @@ use colored::Colorize;
 use reqwest::header::ACCEPT;
 use serde::Deserialize;
 
-use crate::utils::{ColumnConfig, pretty_print_table};
+use crate::utils::{ColumnConfig, backup_existing_file, pretty_print_table};
 
 #[derive(Debug, Deserialize)]
 pub struct KnownHostsResponse {
@@ -372,6 +372,13 @@ pub fn write_known_hosts(server_url: &str, file_path: &str, force: bool) -> Resu
     } else {
         format!("{file_content}\n")
     };
+
+    // Back up the existing file before overwriting it, so a bad merge or a
+    // surprising server response can be recovered from.
+    if let Some(backup) = backup_existing_file(path)? {
+        println!("📦 Backed up existing file to {}", backup.display());
+    }
+
     std::fs::write(path, &file_content)
         .with_context(|| format!("Failed to write to file: {}", path.display()))?;
 
@@ -1329,6 +1336,78 @@ mod tests {
         assert!(!contents.contains("OLD_KEY"));
         // New content should be present
         assert!(contents.contains("new.example.com ssh-rsa NEW_KEY"));
+    }
+
+    #[test]
+    fn test_write_known_hosts_backs_up_existing_file() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["new.example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "NEW_KEY"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        let existing_content = "old.example.com ssh-rsa OLD_KEY\n";
+        fs::write(&file_path, existing_content).unwrap();
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), true);
+        assert!(result.is_ok());
+
+        // A `.bak` with the pre-write contents sits alongside the file.
+        let backup_path = file_path.with_file_name("known_hosts.bak");
+        assert!(backup_path.exists(), "backup was not created");
+        assert_eq!(fs::read_to_string(&backup_path).unwrap(), existing_content);
+    }
+
+    #[test]
+    fn test_write_known_hosts_no_backup_for_new_file() {
+        use tempfile::tempdir;
+
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["new.example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "NEW_KEY"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), false);
+        assert!(result.is_ok());
+
+        assert!(
+            !file_path.with_file_name("known_hosts.bak").exists(),
+            "no backup should be created when the file did not previously exist"
+        );
     }
 
     #[test]

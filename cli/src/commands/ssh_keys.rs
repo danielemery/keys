@@ -5,7 +5,7 @@ use colored::Colorize;
 use reqwest::header::ACCEPT;
 use serde::Deserialize;
 
-use crate::utils::{ColumnConfig, pretty_print_table};
+use crate::utils::{ColumnConfig, backup_existing_file, pretty_print_table};
 
 #[derive(Debug, Deserialize)]
 pub struct KeysResponse {
@@ -316,6 +316,12 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
 
         result_lines.join("\n")
     };
+
+    // Back up the existing file before overwriting it, so a bad merge or a
+    // surprising server response can be recovered from.
+    if let Some(backup) = backup_existing_file(path)? {
+        println!("📦 Backed up existing file to {}", backup.display());
+    }
 
     // Write to file
     std::fs::write(path, file_content)
@@ -1010,6 +1016,63 @@ mod tests {
         // refreshing the comment from the server.
         assert_eq!(lines.len(), 1, "unexpected extra line: {content}");
         assert_eq!(lines[0], r#"from="10.0.0.0/8" ssh-ed25519 AAAA user1@key1"#);
+
+        drop(temp_dir);
+    }
+
+    #[test]
+    fn test_write_ssh_keys_backs_up_existing_file() {
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "keys": [
+                {"key": "ssh-rsa AAAAB1", "user": "user1", "name": "key1", "tags": ["dev"]}
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let existing_content = "ssh-rsa AAAABOLD olduser@oldhost";
+        let (temp_dir, file_path) = setup_temp_dir_and_file(Some(existing_content));
+
+        let result = write_ssh_keys(&server_url, file_path.to_str().unwrap(), true);
+        assert!(result.is_ok(), "write_ssh_keys failed: {:?}", result.err());
+
+        // A `.bak` with the pre-write contents sits alongside the file.
+        let backup_path = file_path.with_file_name("authorized_keys.bak");
+        assert!(backup_path.exists(), "backup was not created");
+        assert_eq!(
+            fs::read_to_string(&backup_path).unwrap(),
+            format!("{existing_content}\n")
+        );
+
+        drop(temp_dir);
+    }
+
+    #[test]
+    fn test_write_ssh_keys_no_backup_for_new_file() {
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "keys": [
+                {"key": "ssh-rsa AAAAB1", "user": "user1", "name": "key1", "tags": ["dev"]}
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        // No existing file.
+        let (temp_dir, file_path) = setup_temp_dir_and_file(None);
+
+        let result = write_ssh_keys(&server_url, file_path.to_str().unwrap(), true);
+        assert!(result.is_ok(), "write_ssh_keys failed: {:?}", result.err());
+
+        assert!(
+            !file_path.with_file_name("authorized_keys.bak").exists(),
+            "no backup should be created when the file did not previously exist"
+        );
 
         drop(temp_dir);
     }
