@@ -3,3 +3,6 @@ coverage.lcov
 .env
 .claude
 .tmp/
+cli/lcov.info
+.tmp
+result
