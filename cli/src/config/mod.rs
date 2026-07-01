@@ -35,16 +35,20 @@ pub fn load_config(config_path: Option<&str>) -> Result<Config> {
 /// Split out from [`load_config`] so tests can inject a default path instead of
 /// depending on the real user config directory.
 fn load_config_from(config_path: Option<&str>, default_path: Option<PathBuf>) -> Result<Config> {
-    // Try to use the provided config path if specified
+    // Try to use the provided config path if specified. An explicitly requested
+    // config file that doesn't exist is a user error (e.g. a typo): fail fast
+    // rather than silently falling back to defaults, which would both print to
+    // stdout and quietly redirect the CLI at the wrong server.
     if let Some(path) = config_path {
         let config_file = Path::new(path);
         if config_file.exists() {
             return load_config_from_path(config_file);
-        } else {
-            println!("Warning: Specified config file not found at {path}");
-            // Fall back to default config if specified file doesn't exist
-            return Ok(Config::default());
         }
+
+        return Err(anyhow::anyhow!(
+            "Specified config file not found at {}",
+            config_file.display()
+        ));
     }
 
     // Try to load from the default location
@@ -167,13 +171,13 @@ server_url = "https://example.com:8080"
 
     #[test]
     fn test_load_config_with_nonexistent_file() {
-        // Try to load config from a non-existent file
+        // An explicitly specified config path that doesn't exist should fail
+        // fast rather than falling back to the default config.
         let result = load_config(Some("/nonexistent/path/config.toml"));
-        assert!(result.is_ok());
+        assert!(result.is_err());
 
-        // Should return default config when file doesn't exist
-        let config = result.unwrap();
-        assert_eq!(config.server_url, "http://localhost:8000");
+        let message = result.unwrap_err().to_string();
+        assert!(message.contains("not found"), "unexpected error: {message}");
     }
 
     #[test]

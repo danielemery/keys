@@ -773,29 +773,21 @@ pitFQwD/S8QRI+0h0qW8PGanUrFX+VeGErdCwKwfPWsBMbovDgc=
     }
 
     #[test]
-    fn test_nonexistent_config_file_warning() {
-        let mut server = Server::new();
-        let mock = server
-            .mock("GET", "/keys")
-            .with_status(200)
-            .with_header("content-type", "application/json")
-            .with_body(r#"{"version": "1.0.0", "keys": []}"#)
-            .create();
-
-        // Use a non-existent config path, but provide server via CLI
+    fn test_nonexistent_config_file_errors() {
+        // An explicitly specified --config path that doesn't exist should fail
+        // fast, even when --server is supplied, rather than silently falling
+        // back to defaults. The server is never contacted.
         get_cmd()
             .args([
                 "--config",
                 "/nonexistent/config.toml",
                 "--server",
-                &server.url(),
+                "http://localhost:8000",
                 "ssh",
             ])
             .assert()
-            .success()
-            .stdout(predicate::str::contains("Warning"));
-
-        mock.assert();
+            .failure()
+            .stderr(predicate::str::contains("not found"));
     }
 
     // ==================== Error Handling Tests ====================

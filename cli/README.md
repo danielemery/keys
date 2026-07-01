@@ -135,6 +135,10 @@ You can also specify a custom config file location:
 keys --config /path/to/config.toml ssh
 ```
 
+If a `--config` path is given but the file doesn't exist, the CLI exits with an
+error rather than falling back to defaults, so a mistyped path is caught instead
+of silently using `http://localhost:8000`.
+
 Command-line options take precedence over configuration file settings.
 
 ## Building
