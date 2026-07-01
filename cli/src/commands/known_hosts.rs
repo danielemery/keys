@@ -180,9 +180,60 @@ fn fetch_known_hosts_from_server(server_url: &str) -> Result<KnownHostsResponse>
         ));
     }
 
-    response
+    let known_hosts_response = response
         .json::<KnownHostsResponse>()
-        .context("Failed to parse JSON response")
+        .context("Failed to parse JSON response")?;
+    validate_known_hosts_response(&known_hosts_response)?;
+    Ok(known_hosts_response)
+}
+
+/// Reject server entries that would produce malformed or forged known_hosts
+/// lines. Host patterns, key types, and keys are interpolated directly into a
+/// space-delimited line, so whitespace (including newlines) in any of them
+/// would break the format or inject additional entries; a newline in a comment
+/// could do the same past the `#`.
+fn validate_known_hosts_response(response: &KnownHostsResponse) -> Result<()> {
+    for host in &response.hosts {
+        if host.hosts.is_empty() {
+            return Err(anyhow::anyhow!(
+                "Server returned a known_hosts entry with no host patterns"
+            ));
+        }
+
+        for pattern in &host.hosts {
+            if pattern.is_empty() || pattern.contains(char::is_whitespace) {
+                return Err(anyhow::anyhow!(
+                    "Server known_hosts entry has an invalid host pattern: {pattern:?}"
+                ));
+            }
+        }
+
+        for key in &host.keys {
+            if key.key_type.is_empty() || key.key_type.contains(char::is_whitespace) {
+                return Err(anyhow::anyhow!(
+                    "Server known_hosts entry has an invalid key type: {:?}",
+                    key.key_type
+                ));
+            }
+
+            if key.key.is_empty() || key.key.contains(char::is_whitespace) {
+                return Err(anyhow::anyhow!(
+                    "Server known_hosts entry has an invalid key value: {:?}",
+                    key.key
+                ));
+            }
+
+            if let Some(comment) = &key.comment
+                && (comment.contains('\n') || comment.contains('\r'))
+            {
+                return Err(anyhow::anyhow!(
+                    "Server known_hosts entry has a comment with an illegal line break: {comment:?}"
+                ));
+            }
+        }
+    }
+
+    Ok(())
 }
 
 pub fn fetch_known_hosts(server_url: &str) -> Result<()> {
@@ -1374,6 +1425,118 @@ mod tests {
         let backup_path = file_path.with_file_name("known_hosts.bak");
         assert!(backup_path.exists(), "backup was not created");
         assert_eq!(fs::read_to_string(&backup_path).unwrap(), existing_content);
+    }
+
+    #[test]
+    fn test_validate_known_hosts_response_rejects_bad_fields() {
+        // Empty host list.
+        let empty_hosts = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![KnownHost {
+                name: None,
+                hosts: vec![],
+                keys: vec![HostKey {
+                    key_type: "ssh-rsa".to_string(),
+                    key: "AAAA".to_string(),
+                    comment: None,
+                    revoked: None,
+                    cert_authority: None,
+                }],
+            }],
+        };
+        assert!(validate_known_hosts_response(&empty_hosts).is_err());
+
+        // Whitespace in a host pattern would split the space-delimited line.
+        let spaced_host = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![KnownHost {
+                name: None,
+                hosts: vec!["exa mple.com".to_string()],
+                keys: vec![HostKey {
+                    key_type: "ssh-rsa".to_string(),
+                    key: "AAAA".to_string(),
+                    comment: None,
+                    revoked: None,
+                    cert_authority: None,
+                }],
+            }],
+        };
+        assert!(validate_known_hosts_response(&spaced_host).is_err());
+
+        // Newline in a comment could inject another entry.
+        let bad_comment = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![KnownHost {
+                name: None,
+                hosts: vec!["example.com".to_string()],
+                keys: vec![HostKey {
+                    key_type: "ssh-rsa".to_string(),
+                    key: "AAAA".to_string(),
+                    comment: Some("ok\nevil.com ssh-rsa INJECTED".to_string()),
+                    revoked: None,
+                    cert_authority: None,
+                }],
+            }],
+        };
+        assert!(validate_known_hosts_response(&bad_comment).is_err());
+    }
+
+    #[test]
+    fn test_validate_known_hosts_response_accepts_valid() {
+        let valid = KnownHostsResponse {
+            version: "1.0.0".to_string(),
+            hosts: vec![KnownHost {
+                name: Some("GitHub".to_string()),
+                hosts: vec!["github.com".to_string(), "*.github.com".to_string()],
+                keys: vec![HostKey {
+                    key_type: "ssh-rsa".to_string(),
+                    key: "AAAAB3NzaC1yc2E".to_string(),
+                    comment: Some("a normal comment".to_string()),
+                    revoked: None,
+                    cert_authority: None,
+                }],
+            }],
+        };
+        assert!(validate_known_hosts_response(&valid).is_ok());
+    }
+
+    #[test]
+    fn test_write_known_hosts_rejects_malformed_server_response() {
+        use std::fs;
+        use tempfile::tempdir;
+
+        // Whitespace in the key value must abort the write.
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "knownHosts": [
+                {
+                    "hosts": ["example.com"],
+                    "keys": [
+                        {
+                            "type": "ssh-rsa",
+                            "key": "AAAA INJECTED"
+                        }
+                    ]
+                }
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let temp_dir = tempdir().unwrap();
+        let file_path = temp_dir.path().join("known_hosts");
+        fs::write(&file_path, "old.example.com ssh-rsa OLD_KEY\n").unwrap();
+
+        let result = write_known_hosts(&server_url, file_path.to_str().unwrap(), true);
+        assert!(result.is_err());
+
+        // Existing file untouched, no backup created.
+        assert_eq!(
+            fs::read_to_string(&file_path).unwrap(),
+            "old.example.com ssh-rsa OLD_KEY\n"
+        );
+        assert!(!file_path.with_file_name("known_hosts.bak").exists());
     }
 
     #[test]

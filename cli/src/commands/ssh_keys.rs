@@ -127,9 +127,35 @@ fn fetch_keys_from_server(server_url: &str) -> Result<KeysResponse> {
         ));
     }
 
-    response
+    let keys_response = response
         .json::<KeysResponse>()
-        .context("Failed to parse JSON response")
+        .context("Failed to parse JSON response")?;
+    validate_keys_response(&keys_response)?;
+    Ok(keys_response)
+}
+
+/// Reject server keys that would produce malformed or forged authorized_keys
+/// lines. `key`, `user`, and `name` are interpolated directly into file lines,
+/// so a newline in any of them could inject additional entries, and an empty
+/// key would write a meaningless line.
+fn validate_keys_response(response: &KeysResponse) -> Result<()> {
+    for key in &response.keys {
+        if key.key.trim().is_empty() {
+            return Err(anyhow::anyhow!(
+                "Server returned an SSH key with an empty key value"
+            ));
+        }
+
+        for (field, value) in [("key", &key.key), ("user", &key.user), ("name", &key.name)] {
+            if value.contains('\n') || value.contains('\r') {
+                return Err(anyhow::anyhow!(
+                    "Server SSH key field `{field}` contains an illegal line break: {value:?}"
+                ));
+            }
+        }
+    }
+
+    Ok(())
 }
 
 pub fn fetch_ssh_keys(server_url: &str) -> Result<()> {
@@ -1046,6 +1072,68 @@ mod tests {
             fs::read_to_string(&backup_path).unwrap(),
             format!("{existing_content}\n")
         );
+
+        drop(temp_dir);
+    }
+
+    #[test]
+    fn test_validate_keys_response_rejects_newline_in_field() {
+        // A newline in the name field could forge a second authorized_keys line.
+        let response = KeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![SSHKey {
+                key: "ssh-rsa AAAAB1".to_string(),
+                user: "user1".to_string(),
+                name: "key1\nssh-rsa INJECTED attacker@evil".to_string(),
+                tags: vec![],
+            }],
+        };
+
+        let result = validate_keys_response(&response);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("line break"));
+    }
+
+    #[test]
+    fn test_validate_keys_response_rejects_empty_key() {
+        let response = KeysResponse {
+            version: "1.0.0".to_string(),
+            keys: vec![SSHKey {
+                key: "   ".to_string(),
+                user: "user1".to_string(),
+                name: "key1".to_string(),
+                tags: vec![],
+            }],
+        };
+
+        let result = validate_keys_response(&response);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("empty key"));
+    }
+
+    #[test]
+    fn test_write_ssh_keys_rejects_malformed_server_response() {
+        // A CR/LF in a server field must abort the write, leaving any existing
+        // file untouched.
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "keys": [
+                {"key": "ssh-rsa AAAAB1", "user": "user1", "name": "key1\ninjected", "tags": []}
+            ]
+        }
+        "#;
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let (temp_dir, file_path) = setup_temp_dir_and_file(Some("ssh-rsa EXISTING me@host"));
+
+        let result = write_ssh_keys(&server_url, file_path.to_str().unwrap(), true);
+        assert!(result.is_err());
+
+        // Existing file is left as-is and no backup was written.
+        let content = fs::read_to_string(&file_path).unwrap();
+        assert_eq!(content, "ssh-rsa EXISTING me@host\n");
+        assert!(!file_path.with_file_name("authorized_keys.bak").exists());
 
         drop(temp_dir);
     }
