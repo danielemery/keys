@@ -161,17 +161,56 @@ fn format_keys_for_pipe(keys_response: &KeysResponse) -> String {
         .join("\n")
 }
 
-/// Helper function to extract just the key part from an SSH key line (without comment)
-fn extract_key_part(ssh_line: &str) -> String {
-    let parts: Vec<&str> = ssh_line.split_whitespace().collect();
-    if parts.len() >= 2 {
-        // Return "ssh-rsa AAAAB..." (type + key, no comment)
-        format!("{} {}", parts[0], parts[1])
-    } else if parts.len() == 1 {
-        parts[0].to_string()
-    } else {
-        ssh_line.trim().to_string()
+/// Whether an authorized_keys token names an SSH key type. Covers the standard
+/// algorithm names (`ssh-rsa`, `ssh-ed25519`, `ecdsa-sha2-*`) and the FIDO/U2F
+/// variants (`sk-ssh-ed25519@openssh.com`, `sk-ecdsa-*`).
+fn is_ssh_key_type(token: &str) -> bool {
+    token.starts_with("ssh-") || token.starts_with("ecdsa-") || token.starts_with("sk-")
+}
+
+/// Split an authorized_keys line into its leading options prefix (if any) and
+/// the normalized `<type> <blob>` identity.
+///
+/// A line may begin with options such as `from="10.0.0.0/8"`, `command="..."`,
+/// or `no-pty` before the key type. We locate the key-type token rather than
+/// assuming it is first, so restricted entries still match the same server key
+/// as their unrestricted equivalent. The options are rejoined with single
+/// spaces (runs of internal whitespace are not preserved).
+fn split_options_and_key(ssh_line: &str) -> (Option<String>, String) {
+    let tokens: Vec<&str> = ssh_line.split_whitespace().collect();
+
+    match tokens.iter().position(|t| is_ssh_key_type(t)) {
+        Some(idx) => {
+            let key_part = match tokens.get(idx + 1) {
+                // "ssh-rsa AAAAB..." (type + blob, no options or comment)
+                Some(blob) => format!("{} {}", tokens[idx], blob),
+                // Key type present but no blob following it.
+                None => tokens[idx].to_string(),
+            };
+            let options = if idx == 0 {
+                None
+            } else {
+                Some(tokens[..idx].join(" "))
+            };
+            (options, key_part)
+        }
+        // No recognizable key type: fall back to the first two tokens so unusual
+        // lines still get a stable identity, and never treat them as options.
+        None => {
+            let key_part = match tokens.len() {
+                0 => ssh_line.trim().to_string(),
+                1 => tokens[0].to_string(),
+                _ => format!("{} {}", tokens[0], tokens[1]),
+            };
+            (None, key_part)
+        }
     }
+}
+
+/// Helper function to extract just the key part (`<type> <blob>`) from an SSH
+/// key line, ignoring any leading options and trailing comment.
+fn extract_key_part(ssh_line: &str) -> String {
+    split_options_and_key(ssh_line).1
 }
 
 /// Helper function to format a server key with user@host comment
@@ -242,7 +281,7 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
 
         // First, add existing keys, updating comments if the key matches a server key
         for existing_line in &existing_lines {
-            let existing_key_part = extract_key_part(existing_line);
+            let (options, existing_key_part) = split_options_and_key(existing_line);
 
             // Check if this key matches any server key
             if let Some(server_key) = keys_response
@@ -250,8 +289,14 @@ pub fn write_ssh_keys(server_url: &str, file_path: &str, force: bool) -> Result<
                 .iter()
                 .find(|k| k.key == existing_key_part)
             {
-                // Update the comment part with server info
-                let new_line = format_server_key(server_key);
+                // Refresh the comment from the server, preserving any local
+                // authorized_keys options (e.g. `from=`, `command=`) so a
+                // restricted entry keeps its restriction instead of being
+                // replaced by an unrestricted line.
+                let new_line = match &options {
+                    Some(opts) => format!("{} {}", opts, format_server_key(server_key)),
+                    None => format_server_key(server_key),
+                };
                 if new_line != *existing_line {
                     updated_keys_count += 1;
                 }
@@ -889,5 +934,83 @@ mod tests {
 
         // Test edge case - only key type
         assert_eq!(extract_key_part("ssh-rsa"), "ssh-rsa");
+
+        // Leading authorized_keys options must be skipped so the identity
+        // matches the same key without options.
+        assert_eq!(
+            extract_key_part(r#"from="10.0.0.0/8" ssh-ed25519 AAAA user@host"#),
+            "ssh-ed25519 AAAA"
+        );
+        assert_eq!(
+            extract_key_part(r#"no-pty,command="/bin/false" ssh-rsa AAAAB123"#),
+            "ssh-rsa AAAAB123"
+        );
+
+        // ECDSA and FIDO/U2F (sk-) key types are recognized too.
+        assert_eq!(
+            extract_key_part("ecdsa-sha2-nistp256 AAAAE2 user@host"),
+            "ecdsa-sha2-nistp256 AAAAE2"
+        );
+        assert_eq!(
+            extract_key_part(r#"from="1.2.3.4" sk-ssh-ed25519@openssh.com AAAASK"#),
+            "sk-ssh-ed25519@openssh.com AAAASK"
+        );
+    }
+
+    #[test]
+    fn test_split_options_and_key() {
+        // No options: prefix is None.
+        assert_eq!(
+            split_options_and_key("ssh-rsa AAAAB123 user@host"),
+            (None, "ssh-rsa AAAAB123".to_string())
+        );
+
+        // Options prefix is captured verbatim (rejoined with single spaces).
+        assert_eq!(
+            split_options_and_key(r#"from="10.0.0.0/8" ssh-ed25519 AAAA user@host"#),
+            (
+                Some(r#"from="10.0.0.0/8""#.to_string()),
+                "ssh-ed25519 AAAA".to_string()
+            )
+        );
+
+        // Line with no recognizable key type is never treated as options.
+        assert_eq!(
+            split_options_and_key("some random text"),
+            (None, "some random".to_string())
+        );
+    }
+
+    #[test]
+    fn test_write_ssh_keys_additive_preserves_options() {
+        // A restricted local entry that matches a server key must keep its
+        // options (the `from=` restriction) rather than gaining a second,
+        // unrestricted line.
+        let mock_response = r#"
+        {
+            "version": "1.0.0",
+            "keys": [
+                {"key": "ssh-ed25519 AAAA", "user": "user1", "name": "key1", "tags": ["dev"]}
+            ]
+        }
+        "#;
+
+        let (server_url, _server) = setup_mock_server(mock_response);
+
+        let existing_content = r#"from="10.0.0.0/8" ssh-ed25519 AAAA olduser@oldhost"#;
+        let (temp_dir, file_path) = setup_temp_dir_and_file(Some(existing_content));
+
+        let result = write_ssh_keys(&server_url, file_path.to_str().unwrap(), false);
+        assert!(result.is_ok(), "write_ssh_keys failed: {:?}", result.err());
+
+        let content = fs::read_to_string(&file_path).unwrap();
+        let lines: Vec<&str> = content.lines().filter(|l| !l.trim().is_empty()).collect();
+
+        // Exactly one line for this key, and it retains the restriction while
+        // refreshing the comment from the server.
+        assert_eq!(lines.len(), 1, "unexpected extra line: {content}");
+        assert_eq!(lines[0], r#"from="10.0.0.0/8" ssh-ed25519 AAAA user1@key1"#);
+
+        drop(temp_dir);
     }
 }
